@@ -44,6 +44,8 @@ with tf.Session() as sess:
         # Loop over all batches
         for i in range(total_batch):
             batch_xs,batch_ys = mnist.train.next_batch(batch_size)
+            # print(type(batch_xs)) <type 'numpy.ndarray'>
+            # print(batch_xs.shape) (100,784)
             # Run optimization op(backprop) and cost op(to get loss value)
             _, c = sess.run([optimizer,cost],feed_dict={x:batch_xs,
                                                      y:batch_ys})
