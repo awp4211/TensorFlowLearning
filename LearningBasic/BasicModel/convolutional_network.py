@@ -43,11 +43,18 @@ def conv_net(x,weights,biases,dropout):
     x = tf.reshape(x,shape=[-1,28,28,1])
     # Convolution Layer1
     conv1 = conv2d(x,weights['wc1'],biases['bc1'])
-    print(type(conv1))
+    # ============================= TODO ======================================
+    # print("=====",type(conv1)) <class 'tensorflow.python.framework.ops.Tensor'>
+    # print(conv1.get_shape())  [?,28,28,32]
+    # print(conv1.dtype) float32
     conv1 = maxpool2d(conv1,k=2)
+    # print conv1.get_shape() [?,14,14,32]
+    # ============================== TODO =====================================
     # Convolution Layer2
     conv2 = conv2d(conv1,weights['wc2'],biases['bc2'])
+    # print conv2.get_shape() [?,14,14,64]
     conv2 = maxpool2d(conv2,k=2)
+    # print conv2.get_shape() [?,7,7,64]
     # Fully connected layer
     fc1 = tf.reshape(conv2,[-1,weights['wd1'].get_shape().as_list()[0]])
     fc1 = tf.add(tf.matmul(fc1,weights['wd1']),biases['bd1'])
