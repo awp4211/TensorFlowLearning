@@ -77,6 +77,8 @@ with tf.Session() as sess:
     print("Optimization Done")
     
     # Test model
+    # tf.argmax 是一个非常有用的函数，它能给出某个tensor对象在某一维上的其数据最大值所在的
+    # 索引值。由于标签向量是由0,1组成，因此最大值1所在的索引位置就是类别标签，比如tf.argmax(y,1)
     correct_prediction = tf.equal(tf.arg_max(pred,1),tf.arg_max(y,1))
 
     # print(type(correct_prediction)) <class 'tensorflow.python.framework.ops.Tensor'>
