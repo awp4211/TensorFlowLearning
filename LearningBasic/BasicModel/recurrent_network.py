@@ -13,6 +13,7 @@ mnist = input_data.read_data_sets("MNIST_data",one_hot=True)
 To classify images using a recurrent neural network,we consider every image 
 row as a sequecne of pixels.Because MNIST image shape is 28*28px,we will then
 handle 28 sequences of 28 steps for every sample
+LSTM处理图像数据时把图像的行看做是n时间序列，每行的数据当做当前时间的输入
 """
 
 # Parameters
@@ -77,6 +78,7 @@ with tf.Session() as sess:
     while step * batch_size < training_iters:
         batch_x,batch_y = mnist.train.next_batch(batch_size)
         # Reshape data to get 28 sequences of 28 elements
+        # 即由原来的[batch_size,input输入数据维度]->[batch_size,n_step,n_input]
         batch_x = batch_x.reshape((batch_size,n_steps,n_input))
         sess.run(optimizer,feed_dict={x:batch_x,
                                       y:batch_y})
