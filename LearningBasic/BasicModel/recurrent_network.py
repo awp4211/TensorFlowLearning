@@ -48,6 +48,7 @@ def RNN(x,weights,biases):
     # Premuting(转置) batch_szie and n_steps -->(n_steps,batch_size,n_input)
     x = tf.transpose(x,[1,0,2])
     # Reshaping to (n_steps*batch_size,n_input)
+    # reshape中的-1表示站位
     x = tf.reshape(x,[-1,n_input])
     # Split to get a list of 'n_steps' tensors of shape(batch_size,n_input)
     x = tf.split(0,n_steps,x)
