@@ -9,7 +9,7 @@ mnist = input_data.read_data_sets("MNIST_data",one_hot=True)
 # Parameter
 learning_rate = 0.001
 training_iters = 100000
-batch_size = 128
+batch_size = 100
 display_step = 10
 
 # Network Parameter
@@ -123,15 +123,20 @@ with tf.Session() as sess:
     print("Optimization Finished!")
     print("Best Accuracy:{0}".format(best_acc))
     
-    test_len = 128
-    test_data = mnist.test.images[:test_len].reshape((-1,n_steps,n_inputs))
-    test_label = mnist.test.labels[:test_len]
+    test_len = 100
+    test_data_size = 10000
+    correct_count = 0.    
     
-    print("Testing Accuracy:{0}".format(
-        sess.run(accuracy,feed_dict={
-            x:test_data,
-            y:test_label,
-            istate_fw:np.zeros((test_len,2*n_hidden)),
-            istate_bw:np.zeros((test_len,2*n_hidden))
-        })        
-    ))
+    for index in range(test_data_size/test_len):
+        test_data = mnist.test.images[test_len*index:test_len*(index+1)].reshape((-1,n_steps,n_inputs))
+        test_label = mnist.test.labels[test_len*index:test_len*(index+1)]
+        acc_t = sess.run(accuracy,feed_dict={
+                x:test_data,
+                y:test_label,
+                istate_fw:np.zeros((batch_size,2*n_hidden)),
+                istate_bw:np.zeros((batch_size,2*n_hidden))
+            })
+        correct_count = correct_count + acc_t * test_len
+        
+    print('Testing Correct count = {0}'.format(correct_count))
+    print("Testing Accuracy:{0}".format(correct_count/test_data_size))
