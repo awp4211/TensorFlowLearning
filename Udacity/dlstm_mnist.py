@@ -65,7 +65,8 @@ def BiRNN(_x,
     _x = tf.split(0,n_steps,_x)
     
     outputs = tf.nn.bidirectional_rnn(
-        lstm_fw_cell,lstm_bw_cell,
+        lstm_fw_cell,
+        lstm_bw_cell,
         _x,
         initial_state_fw=_istate_fw,
         initial_state_bw=_istate_bw,
