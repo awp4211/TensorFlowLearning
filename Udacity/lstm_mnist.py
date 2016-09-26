@@ -78,7 +78,9 @@ def RNN(X,weights,biases):
     #print(type(outputs))#list    
     #print(len(outputs))#n_steps
     #print(type(outputs[0]))#tensorflow.python.framework.ops.Tensor
-    print(outputs)
+    #print(outputs[0].get_shape())#[batch,hidden]
+    #经过上述转换，output变成了[(batch,outputs)* steps]的list，outputs[-1]表示最后一个
+    #step运行之后LSTM单元输出的结果,之后使用SOFTMAX回归即可得到相应的分类结果数据
     #==================================DUBUG===================================                         
     results = tf.matmul(outputs[-1],weights['out']) + biases['out']
     return results
