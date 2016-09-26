@@ -97,6 +97,8 @@ init = tf.initialize_all_variables()
 with tf.Session() as sess:
     sess.run(init)
     step = 0 
+    best_acc = 0.    
+    
     while step*batch_size < training_iters:
         batch_xs,batch_ys = mnist.train.next_batch(batch_size)
         batch_xs = batch_xs.reshape([batch_size,n_steps,n_inputs])
@@ -105,8 +107,30 @@ with tf.Session() as sess:
             y:batch_ys
         })
         if step % display_step == 0:
-            print(sess.run(accuracy,feed_dict={
-                    x:batch_xs,
-                    y:batch_ys
-                }))
+            acc,loss = sess.run([accuracy,cost],feed_dict={
+                x: batch_xs, 
+                y: batch_ys,
+            })
+            if acc > best_acc:
+                best_acc = acc
+            print("Iter {0},Minibatch Loss = {1},Training Accuracy = {2}".format(
+                step*batch_size,loss,acc))
         step+=1
+    print("Optimization Done!")
+    print("Best Accuracy:{0}".format(best_acc))
+    
+    test_len = 100
+    test_data_size = 10000
+    correct_count = 0.
+    
+    for index in range(test_data_size/test_len):
+        test_data = mnist.test.images[test_len*index:test_len*(index+1)].reshape((-1,n_steps,n_inputs))
+        test_label = mnist.test.labels[test_len*index:test_len*(index+1)]
+        acc_t = sess.run(accuracy,feed_dict={
+                x:test_data,
+                y:test_label,
+            })
+        correct_count = correct_count + acc_t * test_len
+        
+    print('Testing Correct count = {0}'.format(correct_count))
+    print("Testing Accuracy:{0}".format(correct_count/test_data_size))
