@@ -63,6 +63,7 @@ def generate_batch(data,batch_size,num_skips=2,skip_window=1):
     assert num_skips <= 2 * skip_window
     batch = np.ndarray(shape=(batch_size),dtype=np.int32)
     labels = np.ndarray(shape=(batch_size,1),dtype=np.int32)
+    # span表示中间词和左右窗口的大小之和
     span = 2 * skip_window + 1
     buffer = collections.deque(maxlen=span)
     # 向队列buffer中添加span个词的索引

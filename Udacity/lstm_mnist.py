@@ -71,6 +71,8 @@ def RNN(X,weights,biases):
     #==================================DUBUG===================================
 
                     
+                    
+                    
     # hidden layer for output as the final results
     # unpack to list[(batch,outputs)* steps]
     # transpose:[batch,28steps,128hidden] ==> [28steps,batch,hidden]
