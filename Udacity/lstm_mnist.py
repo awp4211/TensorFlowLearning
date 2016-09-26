@@ -50,7 +50,8 @@ def RNN(X,weights,biases):
         
     # cell
     # forget_bias = 1.0表示起始时间所有信息通过
-    lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden_units,forget_bias=1.0)
+    lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden_units,
+                                             forget_bias=1.0)
     # lstm cell is divided into two parts(c_state,h_state)
     _init_state = lstm_cell.zero_state(batch_size,dtype=tf.float32)
     # time_major=True表示X_in主要维度,即128batch
@@ -64,9 +65,9 @@ def RNN(X,weights,biases):
     # print('!! 2',type(states))#tensorflow.python.framework.ops.Tensor
                                        
     #[None,28,128](None=batch,28 steps,128 hidden_outputs)
-    print('!! 1',outputs.get_shape())
+    #print('!! 1',outputs.get_shape())
     #[None,256]
-    print('!! 2',states.get_shape())
+    #print('!! 2',states.get_shape())
     #==================================DUBUG===================================
 
                     
