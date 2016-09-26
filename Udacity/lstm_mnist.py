@@ -8,7 +8,7 @@ mnist = input_data.read_data_sets('MNIST_data',one_hot=True)
 # hyperparameters
 lr = 0.001
 training_iters = 100000
-batch_size = 128
+batch_size = 100
 display_step = 10
 
 n_inputs = 28 # MNIST data input(img shape:28*28)
@@ -40,6 +40,9 @@ def RNN(X,weights,biases):
     # X(128 batches,28 steps,28 inputs)
     # X ==> (128 * 28,28 inputs)
     X = tf.reshape(X,[-1,n_inputs])
+    
+
+    # into hidden    
     # X_in ==> (128batch * 28 steps,128 hidden)
     X_in = tf.matmul(X,weights['in']) + biases['in']
     # X_in ==> (128batch,28steps,128hidden)
@@ -48,17 +51,35 @@ def RNN(X,weights,biases):
     # cell
     # forget_bias = 1.0表示起始时间所有信息通过
     lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden_units,forget_bias=1.0)
-    # lstm cell is divided into two parts(c_state,m_state)
+    # lstm cell is divided into two parts(c_state,h_state)
     _init_state = lstm_cell.zero_state(batch_size,dtype=tf.float32)
     # time_major=True表示X_in主要维度,即128batch
-    # time_major=False表示X_in次要维度,即28steps
+    # time_major=False表示X_in次要维度,即28steps（数据的n_steps在第二维，使用False）
     outputs,states = tf.nn.dynamic_rnn(lstm_cell,
                                        X_in,
                                        initial_state=_init_state,
-                                       time_major=False)    
+                                       time_major=False) 
+    #==================================DUBUG===================================
+    # print('!! 1',type(outputs))#tensorflow.python.framework.ops.Tensor
+    # print('!! 2',type(states))#tensorflow.python.framework.ops.Tensor
+                                       
+    #[None,28,128](None=batch,28 steps,128 hidden_outputs)
+    print('!! 1',outputs.get_shape())
+    #[None,256]
+    print('!! 2',states.get_shape())
+    #==================================DUBUG===================================
+
+                    
     # hidden layer for output as the final results
     # unpack to list[(batch,outputs)* steps]
-    outputs = tf.unpack(tf.transpose(outputs,[1,0,2]))                                       
+    # transpose:[batch,28steps,128hidden] ==> [28steps,batch,hidden]
+    outputs = tf.unpack(tf.transpose(outputs,[1,0,2]))   
+    #==================================DUBUG===================================   
+    #print(type(outputs))#list    
+    #print(len(outputs))#n_steps
+    #print(type(outputs[0]))#tensorflow.python.framework.ops.Tensor
+    print(outputs)
+    #==================================DUBUG===================================                         
     results = tf.matmul(outputs[-1],weights['out']) + biases['out']
     return results
 
