@@ -61,25 +61,103 @@ class LSTMRNN(object):
             self.compute_cost()
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(lr).minimize(self.cost)
-            
-    def add_input_layer(self,):
-        l_in_x = tf.reshape(self.xs)
-        pass
     
+    # 向LSTM中传入3D数据
+    def add_input_layer(self,):
+        # [batch,n_steps,input_size] ==> [batch * n_step,input_size]
+        l_in_x = tf.reshape(self.xs,[-1,self.input_size],name='to_2D')
+        # Ws [input_size,cell_size]
+        Ws_in = self._weight_variable(shape=[self.input_size,self.cell_size],
+                                      name='Ws_in')
+        # bs [cell_size,]
+        bs_in = self._bias_variable([self.cell_size,])
+        with tf.name_scope('Wx_plus_b'):
+            # [batch*n_steps,input_size]*[input_size,cell_size]
+            #   ==>[batch*n_steps,cell_size]
+            l_in_y = tf.matmul(l_in_x,Ws_in) + bs_in
+        # reshape l_in_y [batch*n_steps,cell_size] ==> [batch,n_steps,cell_size]
+        self.l_in_y = tf.reshape(l_in_y,[self.batch_size,self.n_steps,self.cell_size],name='to_3D')
+
     def add_cell(self):
-        pass
+        lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(self.cell_size,forget_bias=1.0)
+        with tf.name_scope('initial_state'):
+            self.cell_init_state = lstm_cell.zero_state(self.batch_size,dtype=tf.float32)
+        self.cell_outputs,self.cell_final_state = tf.nn.dynamic_rnn(
+            lstm_cell,
+            self.l_in_y,
+            initial_state=self.cell_init_state,
+            time_major=False
+        )
+        #===================================DEBUG==============================
+        print('!!!! ',self.cell_outputs.get_shape())
+        print('!!!! ',self.cell_final_state.get_shape())
+        #===================================DEBUG==============================
     
     def add_output_layer(self):
-        pass
+        # shape=[batch*n_steps,cell_size]
+        l_out_x = tf.reshape(self.cell_outputs,[-1,self.cell_size],name='to_2D')
+        Ws_out = self._weight_variable([self.cell_size,self.output_size])
+        bs_out = self._bias_variable([self.output_size,])
+        # shape=[batch*n_steps,outpt_size]
+        with tf.name_scope('Wx_plus_b'):
+            self.pred = tf.matmul(l_out_x,Ws_out) + bs_out
     
     def compute_cost(self):
-        pass
+        losses = tf.nn.seq2seq.sequence_loss_by_example(
+            [tf.reshape(self.pred, [-1], name='reshape_pred')],
+            [tf.reshape(self.ys, [-1], name='reshape_target')],
+            [tf.ones([self.batch_size * self.n_steps], dtype=tf.float32)],
+            average_across_timesteps=True,
+            softmax_loss_function=self.ms_error,
+            name='losses'
+        )
+        with tf.name_scope('average_cost'):
+            self.cost = tf.div(
+                tf.reduce_sum(losses, name='losses_sum'),
+                self.batch_size,
+                name='average_cost')
+            tf.scalar_summary('cost', self.cost)
     
-    def ms_error(self):
-        pass
     
-    def _weight_variable(self):
-        pass
+    def ms_error(self,y_pre,y_target):
+        return tf.square(tf.sub(y_pre, y_target))
     
-    def _bias_variable(self):
-        pass
+    def _weight_variable(self,shape,name='weights'):
+        initializer = tf.random_normal_initializer(mean=0.,stddev=1.)
+        return tf.get_variable(shape=shape,initializer=initializer,name=name)
+    
+    def _bias_variable(self,shape,name='biases'):
+        initializer = tf.constant_initializer(0.1)
+        return tf.get_variable(name=name,shape=shape,initializer=initializer)
+
+if __name__ == '__main__':
+    model = LSTMRNN(time_steps,input_size,output_size,cell_size,batch_size)
+    sess = tf.Session()
+    merged = tf.merge_all_summaries()
+    writer = tf.train.SummaryWriter("logs",sess.graph)
+    sess.run(tf.initialize_all_variables())
+    
+    plt.ion()
+    plt.show()
+    
+    for i in range(200):
+        seq,res,xs = get_batch()
+        if i == 0:
+            feed_dict = {
+                model.xs : seq,
+                model.ys : res,
+            }
+        else:
+            feed_dict = {
+                model.xs : seq,
+                model.ys : res,
+                model.cell_init_state:state
+            }
+        _, cost, state, pred = sess.run(
+            [model.train_op, model.cost, model.cell_final_state, model.pred],
+            feed_dict=feed_dict)
+        
+        if i % 20 == 0:
+            print('cost: ', round(cost, 4))
+            result = sess.run(merged, feed_dict)
+            writer.add_summary(result, i)
