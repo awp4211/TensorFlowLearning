@@ -21,8 +21,7 @@ def linear(x,n_units,scope=None,stddev=0.02,activation=lambda x:x):
     shape = x.get_shape().as_list()
     
     with tf.variable_scope(scope or 'Linear'):
-        matrix = tf.get_variable('Matrix',[shape[1],n_units],
-                                 dtype=tf.float32,
+        matrix = tf.get_variable("Matrix", [shape[1], n_units], tf.float32,
                                  tf.random_normal_initializer(stddev=stddev))
         return activation(tf.matmul(x,matrix))
 
@@ -84,8 +83,8 @@ def residual_network(x,
         x = tf.reshape(x,[-1,ndim,ndim,1])
         
     # First convolution expands to 64 channels and downsamples
-    net = conv2d(x,k_h=7,k_w=7,
-                 name='conv1',activaactivation=activation)
+    net = conv2d(x,64,k_h=7,k_w=7,
+                 name='conv1',activation=activation)
     # Max Pool
     net = tf.nn.max_pool(net,[1,3,3,1],
                          strides=[1,2,2,1],padding='SAME')
@@ -94,7 +93,53 @@ def residual_network(x,
     net = conv2d(net,blocks[0].num_filters,k_h=1,k_w=1,
                  stride_h=1,stride_w=1,padding='VALID',name='conv2')
     
+    # Loop through all res blocks
+    for block_i,block in enumerate(blocks):
+        for repeat_i in range(block.num_repeats):
+            name = 'block_%d/repeat_%d'%(block_i,repeat_i)
+            
+            conv = conv2d(net,block.bottleneck_size,k_h=1,k_w=1,
+                          stride_h=1,stride_w=1,padding='VALID',
+                          activation=activation,
+                          name=name+'/conv_in')
+            
+            conv = conv2d(conv,block.bottleneck_size,k_h=3,k_w=3,
+                          padding='SAME',stride_h=1,stride_w=1,
+                          activation=activation,
+                          name=name+'/conv_bottlneck')
+            
+            conv = conv2d(conv,block.num_filters,k_h=1,k_w=1,
+                          padding='VALID',stride_h=1,stride_w=1,
+                          activation=activation,
+                          name=name+'/conv_out')
+            net = conv + net
+        
+        try:
+            next_block = blocks[block_i+1]
+            net = conv2d(net,next_block.num_filters,k_h=1,k_w=1,
+                         padding='SAME',stride_h=1,stride_w=1,bias=False,
+                         name='block_%d/conv_upscale'%block_i)
+        except IndexError:
+            pass
+    
+    # Average Pool
+    net = tf.nn.avg_pool(net,
+                         ksize=[1,net.get_shape().as_list()[1],
+                                net.get_shape().as_list()[2],1],
+                         strides=[1,1,1,1],padding='VALID')
+    net = tf.reshape(
+        net,
+        [-1, net.get_shape().as_list()[1] *
+         net.get_shape().as_list()[2] *
+         net.get_shape().as_list()[3]])
+    
+    # Fully Connection
+    net = linear(net,n_output,activation=tf.nn.softmax)
+    return net
+    
+    
 def test_mnist():
+    print('...... Building Model ......')
     x = tf.placeholder(tf.float32,[None,784])
     y = tf.placeholder(tf.float32,[None,10])
     y_pred = residual_network(x,10)
@@ -109,11 +154,34 @@ def test_mnist():
     
     # Session
     with tf.Session() as sess:
-        init = tf.initialize_variables()
+        print('...... Init Variable ......')
+        init = tf.initialize_all_variables()
         sess.run(init)
         
         # Parameter
         batch_size = 50
         n_epochs = 5
         for epoch_i in range(n_epochs):
-            training_accuracy
+            # Training
+            train_accuracy = 0
+            for batch_i in range(mnist.train.num_examples // batch_size):
+                batch_xs,batch_ys = mnist.train.next_batch(batch_size)
+                train_accuracy += sess.run([optimizer,accuracy],feed_dict={
+                                           x:batch_xs,y:batch_ys
+                                           })[1]
+            train_accuracy /= (mnist.train.num_examples//batch_size)
+            
+            # Validation
+            valid_accuracy = 0
+            for batch_i in range(mnist.validation.num_examples // batch_size):
+                batch_xs,batch_ys = mnist.validation.net_batch(batch_size)
+                valid_accuracy += sess.run(accuracy,
+                                           feed_dict={
+                                               x:batch_xs,
+                                               y:batch_ys})
+            valid_accuracy /= (mnist.validation.num_examples // batch_size)
+            print('epoch:', epoch_i, ', train:',train_accuracy, ', valid:', valid_accuracy)
+            
+            
+if __name__ == '__main__':
+    test_mnist()
