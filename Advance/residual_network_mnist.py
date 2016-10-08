@@ -76,6 +76,7 @@ def residual_network(x,
               LayerBlock(3,1024,256)]
     input_shape = x.get_shape().as_list()
     
+    
     if len(input_shape) == 2:
         ndim = int(sqrt(input_shape[1]))
         if ndim*ndim!=input_shape[1]:
@@ -88,15 +89,15 @@ def residual_network(x,
                  name='conv1',activation=activation)#padding=SAME,stride=2
     print('conv1,shape = {0}'.format(net.get_shape()))#[batch_size,14,14,64]
     
-    # Max Pool
+    # Max Pool 3*3 kernel pool,stride=2,padding=SAME(kernel-1)/2
     net = tf.nn.max_pool(net,[1,3,3,1],
                          strides=[1,2,2,1],padding='SAME')
-    print('max pool1,shape = {0}'.format(net.get_shape()))
+    print('max pool1,shape = {0}'.format(net.get_shape()))#[batch,7,7,64]
    
-    # Setup first chain of resnets
+    # Setup first chain of resnets 1*1卷积
     net = conv2d(net,blocks[0].num_filters,k_h=1,k_w=1,
                  stride_h=1,stride_w=1,padding='VALID',name='conv2')
-    print('conv2,shape = {0}'.format(net.get_shape()))
+    print('conv2,shape = {0}'.format(net.get_shape()))#[batch,7,7,128]
     
     print('Residual Networds:')
     # Loop through all res blocks
@@ -111,25 +112,29 @@ def residual_network(x,
                           activation=activation,
                           name=name+'/conv_in')
             print('{0}/conv_in,shape = {1}'.format(name,conv.get_shape()))
+            #!*1卷积[batch,7,7,bottleneck_size]
             
             conv = conv2d(conv,block.bottleneck_size,k_h=3,k_w=3,
                           padding='SAME',stride_h=1,stride_w=1,
                           activation=activation,
                           name=name+'/conv_bottlneck')
             print('{0}/conv_bottleneck,shape = {1}'.format(name,conv.get_shape()))
+            #3*3卷积[batch,7,7,bottlneck_size]
             
             conv = conv2d(conv,block.num_filters,k_h=1,k_w=1,
                           padding='VALID',stride_h=1,stride_w=1,
                           activation=activation,
                           name=name+'/conv_out')
             print('{0}/conv_out,shape = {1}'.format(name,conv.get_shape()))
+            #1*1卷积[batch,7,7,num_filters]
             
             net = conv + net
             print('{0}/merge,shape = {1}'.format(name,net.get_shape))
+            #[batch,7,7,num_filters]
             
         try:
             print('===========================================================')
-            print('Next Block (Upscale)')
+            print('Next Block (Upscale)')#增加维度
             next_block = blocks[block_i+1]
             name_s = 'block_{0}/conv_upscale'.format(block_i)
             net = conv2d(net,next_block.num_filters,k_h=1,k_w=1,
@@ -143,7 +148,7 @@ def residual_network(x,
                          ksize=[1,net.get_shape().as_list()[1],
                                 net.get_shape().as_list()[2],1],
                          strides=[1,1,1,1],padding='VALID')
-    print('Average Pool,shape = {0}'.format(net.get_shape()))
+    print('Average Pool,shape = {0}'.format(net.get_shape()))# 7*7均值采样
     net = tf.reshape(
         net,
         [-1, net.get_shape().as_list()[1] *
@@ -183,7 +188,8 @@ def test_mnist():
             train_accuracy = 0
             for batch_i in range(mnist.train.num_examples // batch_size):
                 batch_xs,batch_ys = mnist.train.next_batch(batch_size)
-                train_accuracy += sess.run([optimizer,accuracy],feed_dict={
+                train_accuracy += sess.run([optimizer,accuracy],
+                                           feed_dict={
                                            x:batch_xs,y:batch_ys
                                            })[1]
             train_accuracy /= (mnist.train.num_examples//batch_size)
