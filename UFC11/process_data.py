@@ -19,8 +19,19 @@ def process_data(width=256,height=256):
     
     #===training set 33528 = 24 * 1397
     for img_path in train_file.readlines():
-        
+        pass
     
+    #===training label 1397
+    for label in train_label.readlines():
+        pass        
+     
+    #===testing set 4872 = 24 * 203
+    for img_path in test_file.readlines():
+        pass
+    
+    #===testing set 203
+    for label in test_label.readlines():
+        pass
     
 
 def convert_image_to_vec(img,width,height):
@@ -35,7 +46,7 @@ def convert_image_to_vec(img,width,height):
     return mat.reshape(1,width*height).flatten()
 
 def load_data_set():
-    
+    pass
         
 if __name__ == '__main__':
     process_data()
