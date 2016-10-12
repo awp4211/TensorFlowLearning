@@ -62,10 +62,23 @@ def process_data(width=256,height=256):
     
     train_set_y = np.asarray(train_set_y)
     
-    print(train_set_x.shape)
+    print(type(train_set_x))    
+    print(type(train_set_y))
+    print(type(test_set_x))
+    print(type(test_set_y))
+
+    print(train_set_x.shape)  
     print(train_set_y.shape)
     print(test_set_x.shape)
-    print(test_set_y.shape)
+    print(test_set_y.shape)    
+
+    # 保存到pickle
+    file_name = 'ufc11_{0}_{1}.pkl.gz'.format(width,height)
+    f = open(file_name,'wb')
+    cPickle.dump(train_set_x,f,-1)
+    cPickle.dump(train_set_y,f,-1)   
+    cPickle.dump(test_set_x,f,-1)
+    cPickle.dump(test_set_y,f,-1)    
     
   
 def one_hot_encoder(label,class_count):
@@ -91,4 +104,4 @@ def load_data_set():
     pass
         
 if __name__ == '__main__':
-    process_data(width=128,height=128)
+    process_data(width=256,height=256)
