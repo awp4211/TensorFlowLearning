@@ -100,8 +100,14 @@ def convert_image_to_vec(img,width,height):
     #使用flatten之后变成一维向量
     return mat.reshape(1,width*height).flatten()
 
-def load_data_set():
-    pass
+def load_data_set(width=256,height=256):
+    file_name = 'ufc11_{0}_{1}.pkl.gz'.format(width,height)
+    f = open(file_name,'wb')
+    train_set_x = cPickle.load(f)
+    train_set_y = cPickle.load(f)
+    test_set_x = cPickle.load(f)
+    test_set_y = cPickle.load(f)
+    return train_set_x,train_set_y,test_set_x,test_set_y
         
 if __name__ == '__main__':
     process_data(width=256,height=256)
