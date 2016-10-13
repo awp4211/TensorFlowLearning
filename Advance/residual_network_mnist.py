@@ -112,7 +112,7 @@ def residual_network(x,
                           activation=activation,
                           name=name+'/conv_in')
             print('{0}/conv_in,shape = {1}'.format(name,conv.get_shape()))
-            #!*1卷积[batch,7,7,bottleneck_size]
+            #1*1卷积[batch,7,7,bottleneck_size]
             
             conv = conv2d(conv,block.bottleneck_size,k_h=3,k_w=3,
                           padding='SAME',stride_h=1,stride_w=1,
@@ -149,11 +149,15 @@ def residual_network(x,
                                 net.get_shape().as_list()[2],1],
                          strides=[1,1,1,1],padding='VALID')
     print('Average Pool,shape = {0}'.format(net.get_shape()))# 7*7均值采样
+    # [batch,1,1,1024]
     net = tf.reshape(
         net,
         [-1, net.get_shape().as_list()[1] *
          net.get_shape().as_list()[2] *
          net.get_shape().as_list()[3]])
+    
+    print('After residual network shape = {0}'.format(net.get_shape()))
+    # [batch,1024]
     
     # Fully Connection
     net = linear(net,n_output,activation=tf.nn.softmax)
