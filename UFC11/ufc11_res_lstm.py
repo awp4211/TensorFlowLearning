@@ -135,6 +135,7 @@ def residual_network():
         [-1, net.get_shape().as_list()[1] *
          net.get_shape().as_list()[2] *
          net.get_shape().as_list()[3]])
+    print('After residual network shape = {0}'.format(net.get_shape()))
     
         
 def train():
