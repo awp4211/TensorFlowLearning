@@ -2,6 +2,12 @@
 
 """
 Residual network and LSTM
+this code running on tensorflow 0.10.0 platform
+By using residual network(ResNet38)(CNN) to extract features and
+    using LSTM(single layer LSTM) to process sequence data
+
+
+    
 UFC11 dataset
 """
 import tensorflow as tf
@@ -49,7 +55,9 @@ def conv2d(x,n_filters,
             conv = activation(conv)
         return conv   
 
-def residual_network():
+def residual_network(x,
+                     n_output,
+                     activation=tf.nn.relu):
     LayerBlock = namedtuple(
                 'LayerBlock',['num_repeats','num_filters','bottleneck_size'])
     blocks = [LayerBlock(3,128,32),
@@ -139,6 +147,8 @@ def residual_network():
     
         
 def train():
+    
+    
     print('...... loading the dataset ......')
     train_set_x,train_set_y,test_set_x,test_set_y = pd.load_data_set()
     
