@@ -3,6 +3,7 @@ import PIL
 from PIL import Image
 
 import numpy as np
+import sys
 
 clazz_count = 11
 
@@ -99,16 +100,25 @@ def convert_image_to_vec(img,width,height):
 
 def load_data_set(width=256,height=256):
 
-    file1 = 'test_set_x_{0}_{1}.npz'.format(width,height)
-    file2 = 'test_set_y_{0}_{1}.npz'.format(width,height)
-    file3 = 'train_set_x.npz_{0}_{1}.npz'.format(width,height)
-    file4 = 'train_set_y.npz_{0}_{1}.npz'.format(width,height)
+    file1 = 'UFC11_dataset/test_set_x_{0}_{1}.npz.npy'.format(width,height)
+    file2 = 'UFC11_dataset/test_set_y_{0}_{1}.npz.npy'.format(width,height)
+    file3 = 'UFC11_dataset/train_set_x_{0}_{1}.npz.npy'.format(width,height)
+    file4 = 'UFC11_dataset/train_set_y_{0}_{1}.npz.npy'.format(width,height)
     
-    train_set_x = np.load(file3)
-    train_set_y = np.load(file4)
     test_set_x = np.load(file1)
     test_set_y = np.load(file2)
+    train_set_x = np.load(file3)
+    train_set_y = np.load(file4)
+    
     return train_set_x,train_set_y,test_set_x,test_set_y
         
 if __name__ == '__main__':
-    process_data(width=256,height=256)
+    if sys.argv[1]:
+        if sys.argv[2]:
+            print('...... process_data customer:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+            w = int(sys.argv[1])
+            h = int(sys.argv[2])
+            process_data(width=w,height=h)
+    else:      
+        print('...... process_data default:width = 256,height = 256')
+        process_data(width=256,height=256)
