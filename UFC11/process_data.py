@@ -58,7 +58,7 @@ def process_data(width=256,height=256):
             print('processed {0} images'.format(index))
             
     train_set_x = np.asarray(train_set_x)
-    file3 = 'train_set_x.npz_{0}_{1}.npz'.format(width,height)
+    file3 = 'train_set_x_{0}_{1}.npz'.format(width,height)
     np.save(file3,train_set_x)    
     
     #===training label 1397
@@ -67,7 +67,7 @@ def process_data(width=256,height=256):
         train_set_y.append(vec)
     
     train_set_y = np.asarray(train_set_y)
-    file4 = 'train_set_y.npz_{0}_{1}.npz'.format(width,height)
+    file4 = 'train_set_y_{0}_{1}.npz'.format(width,height)
     np.save(file4,train_set_y)    
      
     print(train_set_x.shape)  
