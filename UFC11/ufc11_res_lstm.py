@@ -22,15 +22,16 @@ n_train_example = 33528
 n_test_example = 4872
 
 # Network Parameter
-learning_rate = 0.1
-pic_batch_size = 480
+learning_rate = 0.01
+
+pic_batch_size = 240 # % fps == 0
 fps = 24
 video_batch_size = pic_batch_size / fps
 n_classes = 11
 
 
 # LSTM Parameter
-n_hidden_units = 128
+n_hidden_units = 512
 
 
 """
@@ -43,10 +44,11 @@ stddev:float--Initialization's standard deviation
 activation:arguments--Function which applies a nonlinearity
 padding:str--'SAME' or 'VALID'
 """        
-def conv2d(x,n_filters,
+def conv2d(x,
+           n_filters,
            k_h=5,k_w=5,
            stride_h=2,stride_w=2,
-           stddev=0.02,
+           stddev=0.1,
            activation=None,
            bias=True,
            padding='SAME',
@@ -174,7 +176,7 @@ def lstm_layer(x):
     weights = {
         #(n_inpus=1024,n_hidden_units=128)
         'in':tf.Variable(tf.random_normal([n_inputs,n_hidden_units])),
-        #(128,10)
+        #(n_hidden_units=128,n_classes=11)
         'out':tf.Variable(tf.random_normal([n_hidden_units,n_classes]))
     }
     biases = {
@@ -217,7 +219,6 @@ def lstm_layer(x):
     # transpose:[video_batch_size,fps,n_hidden_units]
     #               ==> [fps,video_batch_size,n_hidden_units]
     outputs = tf.unpack(tf.transpose(outputs,[1,0,2]))
-    
     #==================================DUBUG===================================   
     # print(type(outputs))#list    
     # print(len(outputs))# fps
@@ -241,8 +242,7 @@ def train_res_lstm(width=256,height=256):
     
     # Define loss and training functions
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
-    #cross_entropy = -tf.reduce_sum(y * tf.log(y_pred))
-    optimizer = tf.train.AdamOptimizer().minimize(cost)
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
     
     # Monitor Accuracy
     correct_prediction = tf.equal(tf.argmax(y_pred,1),tf.argmax(y,1))
@@ -250,29 +250,33 @@ def train_res_lstm(width=256,height=256):
 
     best_acc = 0.
     
+    init = tf.initialize_all_variables()
     # Session
     with tf.Session() as sess:
         print('...... initializating varibale ...... ')
-        init = tf.initialize_all_variables()
         sess.run(init)
         
         n_epochs = 5
         print('...... start to training ......')
         for epoch_i in range(n_epochs):
             # Training 
-            train_accuracy = 0
+            train_accuracy = 0.
             for batch_i in range(n_train_example//pic_batch_size):
                 
                 batch_xs = train_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
                 batch_ys = train_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
-                acc = sess.run([optimizer,accuracy],
+                _,loss,acc,yy = sess.run([optimizer,cost,accuracy,y_pred],
                                            feed_dict={
                                                 x:batch_xs,
                                                 y:batch_ys}
-                                                )[1]
+                                                )
+                print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy))
+                print('epoch:{0},minibatch:{1},cost:{2}'.format(epoch_i,batch_i,loss))
                 print('epoch:{0},minibatch:{1},train_accuracy:{2}'.format(epoch_i,batch_i,acc))
                 train_accuracy += acc
+
             train_accuracy /= (n_test_example//pic_batch_size)
+            print('epoch:{0},training acc = {1}'.format(epoch_i,train_accuracy))
             
             # Validation
             valid_accuracy = 0.
