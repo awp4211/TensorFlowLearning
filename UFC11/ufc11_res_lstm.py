@@ -206,7 +206,7 @@ def lstm_layer(x):
     
 def train_res_lstm(width=256,height=256):
     print('...... loading the dataset ......')
-    train_set_x,train_set_y,test_set_x,test_set_y = pd.load_data_set()
+    train_set_x,train_set_y,test_set_x,test_set_y = pd.load_data_set(width,height)
     
     print('...... building the model ......')
     x = tf.placeholder(tf.float32,[None,width*height])
@@ -264,4 +264,6 @@ def train_res_lstm(width=256,height=256):
 
 
 if __name__ == '__main__':
-    train_res_lstm()
+    width=128
+    height=128
+    train_res_lstm(width,height)

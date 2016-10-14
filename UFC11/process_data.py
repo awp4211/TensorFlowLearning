@@ -98,7 +98,7 @@ def convert_image_to_vec(img,width,height):
     #使用flatten之后变成一维向量
     return mat.reshape(1,width*height).flatten()
 
-    
+# TEST
 def load_test_set(width=256,height=256):
     file1 = 'UFC11_dataset/test_set_x_{0}_{1}.npz.npy'.format(width,height)
     file2 = 'UFC11_dataset/test_set_y_{0}_{1}.npz.npy'.format(width,height)
@@ -115,9 +115,13 @@ def load_data_set(width=256,height=256):
     file4 = 'UFC11_dataset/train_set_y_{0}_{1}.npz.npy'.format(width,height)
     
     test_set_x = np.load(file1)# 203 = 7*29
+    print('...... Extracted test_set_x file:{0} ......'.format(file1))
     test_set_y = np.load(file2)
+    print('...... Extracted test_set_y file:{0} ......'.format(file2))    
     train_set_x = np.load(file3)# 1397 = 127 * 11
+    print('...... Extracted train_set_x file{0} ......'.format(file3))
     train_set_y = np.load(file4)
+    print('...... Extracted train_set_y file{0} ......'.format(file4))
     
     return train_set_x,train_set_y,test_set_x,test_set_y
         
