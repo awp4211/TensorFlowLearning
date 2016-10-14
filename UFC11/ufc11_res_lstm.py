@@ -11,8 +11,11 @@ UFC11 dataset contains 1600 videos and hava been classified 11 classes
 """
 import tensorflow as tf
 import process_data as pd
+import sys
+
 from collections import namedtuple
 from math import sqrt
+
 
 # Dataset count
 n_train_example = 33528
@@ -20,7 +23,7 @@ n_test_example = 4872
 
 # Network Parameter
 learning_rate = 0.1
-pic_batch_size = 240
+pic_batch_size = 480
 fps = 24
 video_batch_size = pic_batch_size / fps
 n_classes = 11
@@ -158,11 +161,15 @@ def residual_network(x,
 
     
 def lstm_layer(x):
+    
+    print('============================LSTM==================================')
+    
     # x :[pic_batch_size,1024]
     # transpose to [video_batch_size,fps,1024]
     # get input     
     n_inputs = x.get_shape().as_list()[-1]
-    
+    print('LSTM Layer n_inputs={0}'.format(n_inputs))    
+
     # Define weights
     weights = {
         #(n_inpus=1024,n_hidden_units=128)
@@ -197,10 +204,28 @@ def lstm_layer(x):
                                        initial_state=_init_state,
                                        time_major=False
                                        )
+    #==================================DUBUG===================================
+                                       
+    #[10,24,128][video_batch_size,fps,n_hidden_units]
+    print('After LSTM layer dynamic run,output shape = {0}'.format(outputs.get_shape()))
+    # <class 'tensorflow.python.ops.rnn_cell.LSTMStateTuple'>
+    # print(type(states))
+    # print('!! 2',states.get_shape())
+    #==================================DUBUG===================================
+    
     # unpack to list[(video_batch_size,outpits)*fps]
     # transpose:[video_batch_size,fps,n_hidden_units]
     #               ==> [fps,video_batch_size,n_hidden_units]
     outputs = tf.unpack(tf.transpose(outputs,[1,0,2]))
+    
+    #==================================DUBUG===================================   
+    # print(type(outputs))#list    
+    # print(len(outputs))# fps
+    # print(outputs[0].get_shape())#[video_batch_size,n_hidden_units]
+    #经过上述转换，output变成了[(batch,outputs)* steps]的list，outputs[-1]表示最后一个
+    #step运行之后LSTM单元输出的结果,之后使用SOFTMAX回归即可得到相应的分类结果数据
+    #==================================DUBUG===================================
+    
     results = tf.matmul(outputs[-1],weights['out']) + biases['out']
     return results
     
@@ -210,17 +235,18 @@ def train_res_lstm(width=256,height=256):
     
     print('...... building the model ......')
     x = tf.placeholder(tf.float32,[None,width*height])
-    y = tf.placeholder(tf.float32,[None,10])
+    y = tf.placeholder(tf.float32,[None,n_classes])
     y_res = residual_network(x)
     y_pred = lstm_layer(y_res)
     
     # Define loss and training functions
-    cross_entropy = -tf.reduce_sum(y * tf.log(y_pred))
-    optimizer = tf.train.AdamOptimizer().minimize(cross_entropy)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
+    #cross_entropy = -tf.reduce_sum(y * tf.log(y_pred))
+    optimizer = tf.train.AdamOptimizer().minimize(cost)
     
     # Monitor Accuracy
     correct_prediction = tf.equal(tf.argmax(y_pred,1),tf.argmax(y,1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction,'float'))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 
     best_acc = 0.
     
@@ -236,13 +262,16 @@ def train_res_lstm(width=256,height=256):
             # Training 
             train_accuracy = 0
             for batch_i in range(n_train_example//pic_batch_size):
+                
                 batch_xs = train_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
                 batch_ys = train_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
-                train_accuracy += sess.run([optimizer,accuracy],
+                acc = sess.run([optimizer,accuracy],
                                            feed_dict={
                                                 x:batch_xs,
                                                 y:batch_ys}
                                                 )[1]
+                print('epoch:{0},minibatch:{1},train_accuracy:{2}'.format(epoch_i,batch_i,acc))
+                train_accuracy += acc
             train_accuracy /= (n_test_example//pic_batch_size)
             
             # Validation
@@ -264,6 +293,13 @@ def train_res_lstm(width=256,height=256):
 
 
 if __name__ == '__main__':
-    width=128
-    height=128
-    train_res_lstm(width,height)
+    
+    if sys.argv[1]:
+        if sys.argv[2]:
+            print('...... training res and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+            w = int(sys.argv[1])
+            h = int(sys.argv[2])
+            train_res_lstm(width=w,height=h)
+    else:      
+        print('...... process_data default:width = 256,height = 256')
+        train_res_lstm()
