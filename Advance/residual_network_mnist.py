@@ -87,6 +87,7 @@ def residual_network(x,
     # First convolution expands to 64 channels and downsamples
     net = conv2d(x,64,k_h=7,k_w=7,
                  name='conv1',activation=activation)#padding=SAME,stride=2
+    
     print('conv1,shape = {0}'.format(net.get_shape()))#[batch_size,14,14,64]
     
     # Max Pool 3*3 kernel pool,stride=2,padding=SAME(kernel-1)/2
@@ -149,7 +150,7 @@ def residual_network(x,
                                 net.get_shape().as_list()[2],1],
                          strides=[1,1,1,1],padding='VALID')
     print('Average Pool,shape = {0}'.format(net.get_shape()))# 7*7均值采样
-    # [batch,1,1,1024]
+    # [batch,1,1,1024]均值采样之后变成1*1的图像
     net = tf.reshape(
         net,
         [-1, net.get_shape().as_list()[1] *
