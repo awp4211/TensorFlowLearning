@@ -31,7 +31,7 @@ n_classes = 11
 
 
 # LSTM Parameter
-n_hidden_units = 512
+n_hidden_units = 384
 
 
 """
