@@ -40,7 +40,7 @@ def process_data(width=256,height=256):
     
     #===testing set 203
     for label in test_label.readlines():
-        vec = one_hot_encoder(label,clazz_count)
+        vec = one_hot_encoder(int(label),clazz_count)
         test_set_y.append(vec)    
     
     test_set_y = np.asarray(test_set_y)
@@ -63,7 +63,7 @@ def process_data(width=256,height=256):
     
     #===training label 1397
     for label in train_label.readlines():
-        vec = one_hot_encoder(label,clazz_count)
+        vec = one_hot_encoder(int(label),clazz_count)
         train_set_y.append(vec)
     
     train_set_y = np.asarray(train_set_y)
