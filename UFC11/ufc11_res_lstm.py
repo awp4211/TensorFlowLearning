@@ -24,7 +24,7 @@ n_test_example = 4872
 # Network Parameter
 learning_rate = 0.001
 
-pic_batch_size = 240 # % fps == 0
+pic_batch_size = 2400 # % fps == 0
 fps = 24
 video_batch_size = pic_batch_size / fps
 n_classes = 11
@@ -256,7 +256,7 @@ def train_res_lstm(width=256,height=256):
         print('...... initializating varibale ...... ')
         sess.run(init)
         
-        n_epochs = 5
+        n_epochs = 100
         print('...... start to training ......')
         for epoch_i in range(n_epochs):
             # Training 
@@ -265,15 +265,14 @@ def train_res_lstm(width=256,height=256):
                 
                 batch_xs = train_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
                 batch_ys = train_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
-                _,loss,acc,yy_pred,yy_res = sess.run([optimizer,cost,accuracy,y_pred,y_res],
+                _,loss,acc = sess.run([optimizer,cost,accuracy],
                                            feed_dict={
                                                 x:batch_xs,
                                                 y:batch_ys}
                                                 )
                 #print('epoch:{0},minibatch:{1},y_res:{2}'.format(epoch_i,batch_i,yy_res))
                 #print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy_pred))
-                print('epoch:{0},minibatch:{1},cost:{2}'.format(epoch_i,batch_i,loss))
-                print('epoch:{0},minibatch:{1},train_accuracy:{2}'.format(epoch_i,batch_i,acc))
+                print('epoch:{0},minibatch:{1},cost:{2},train_accuracy:{3}'.format(epoch_i,batch_i,loss,acc))
                 train_accuracy += acc
 
             train_accuracy /= (n_train_example//pic_batch_size)
