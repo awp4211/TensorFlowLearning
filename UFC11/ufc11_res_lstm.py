@@ -265,18 +265,19 @@ def train_res_lstm(width=256,height=256):
                 
                 batch_xs = train_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
                 batch_ys = train_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
-                _,loss,acc,yy = sess.run([optimizer,cost,accuracy,y_pred],
+                _,loss,acc,yy_pred,yy_res = sess.run([optimizer,cost,accuracy,y_pred,y_res],
                                            feed_dict={
                                                 x:batch_xs,
                                                 y:batch_ys}
                                                 )
-                print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy))
+                print('epoch:{0},minibatch:{1},y_res:{2}'.format(epoch_i,batch_i,yy_res))
+                print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy_pred))
                 print('epoch:{0},minibatch:{1},cost:{2}'.format(epoch_i,batch_i,loss))
                 print('epoch:{0},minibatch:{1},train_accuracy:{2}'.format(epoch_i,batch_i,acc))
                 train_accuracy += acc
 
             train_accuracy /= (n_test_example//pic_batch_size)
-            print('epoch:{0},training acc = {1}'.format(epoch_i,train_accuracy))
+            print('----epoch:{0},training acc = {1}'.format(epoch_i,train_accuracy))
             
             # Validation
             valid_accuracy = 0.
@@ -305,5 +306,5 @@ if __name__ == '__main__':
             h = int(sys.argv[2])
             train_res_lstm(width=w,height=h)
     else:      
-        print('...... process_data default:width = 256,height = 256')
+        print('...... training res and lstm default net:width = 256,height = 256')
         train_res_lstm()
