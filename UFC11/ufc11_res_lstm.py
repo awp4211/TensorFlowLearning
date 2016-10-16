@@ -22,7 +22,7 @@ n_train_example = 33528
 n_test_example = 4872
 
 # Network Parameter
-learning_rate = 0.01
+learning_rate = 0.001
 
 pic_batch_size = 240 # % fps == 0
 fps = 24
@@ -270,13 +270,13 @@ def train_res_lstm(width=256,height=256):
                                                 x:batch_xs,
                                                 y:batch_ys}
                                                 )
-                print('epoch:{0},minibatch:{1},y_res:{2}'.format(epoch_i,batch_i,yy_res))
-                print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy_pred))
+                #print('epoch:{0},minibatch:{1},y_res:{2}'.format(epoch_i,batch_i,yy_res))
+                #print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy_pred))
                 print('epoch:{0},minibatch:{1},cost:{2}'.format(epoch_i,batch_i,loss))
                 print('epoch:{0},minibatch:{1},train_accuracy:{2}'.format(epoch_i,batch_i,acc))
                 train_accuracy += acc
 
-            train_accuracy /= (n_test_example//pic_batch_size)
+            train_accuracy /= (n_train_example//pic_batch_size)
             print('----epoch:{0},training acc = {1}'.format(epoch_i,train_accuracy))
             
             # Validation
