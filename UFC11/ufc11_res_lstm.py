@@ -290,7 +290,7 @@ def train_res_lstm(width=256,height=256):
             valid_accuracy /= (n_test_example//pic_batch_size)
             print('epoch:{0},train_accuracy:{1},valid_accuracy:{2}'.format(epoch_i,train_accuracy,valid_accuracy))
             if(train_accuracy > best_acc):
-                best_acc > train_accuracy
+                best_acc = train_accuracy
     
     print('...... training finished ......')
     print('...... best accuracy{0} ......'.format(best_acc))
