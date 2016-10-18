@@ -2,7 +2,7 @@
 
 """
 Author:XiyouZhaoC
-Residual network and LSTM
+Residual network and BiLSTM
 this code running on tensorflow 0.10.0 platform
 By using residual network(ResNet38)(CNN) to extract features and
     using Bidirectional LSTM(double layers LSTM) to process sequence data
@@ -302,11 +302,11 @@ if __name__ == '__main__':
     
     if sys.argv[1]:
         if sys.argv[2]:
-            print('...... training res and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+            print('...... training res and blstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
             w = int(sys.argv[1])
             h = int(sys.argv[2])
             train_res_blstm(width=w,height=h)
     else:      
-        print('...... process_data default:width = 256,height = 256')
+        print('...... training res and blstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
         train_res_blstm()
    
