@@ -1,0 +1,424 @@
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcublas.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcudnn.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcufft.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcuda.so.1 locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcurand.so locally
+Traceback (most recent call last):
+  File "ufc11_res_lstm.py", line 301, in <module>
+    if sys.argv[1]:
+IndexError: list index out of range
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcublas.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcudnn.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcufft.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcuda.so.1 locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcurand.so locally
+...... training res and lstm network:width = 96,height = 96
+...... loading the dataset ......
+...... Extracted test_set_x file:UFC11_dataset/test_set_x_96_96.npz.npy ......
+...... Extracted test_set_y file:UFC11_dataset/test_set_y_96_96.npz.npy ......
+...... Extracted train_set_x fileUFC11_dataset/train_set_x_96_96.npz.npy ......
+...... Extracted train_set_y fileUFC11_dataset/train_set_y_96_96.npz.npy ......
+...... building the model ......
+input layer,shape = (?, 96, 96, 1)
+conv1,shape = (?, 48, 48, 64)
+max pool1,shape = (?, 24, 24, 64)
+conv2,shape = (?, 24, 24, 128)
+Residual Networds:
+block_0/repeat_0 start......
+block_0/repeat_0/conv_in,shape = (?, 24, 24, 32)
+block_0/repeat_0/conv_bottleneck,shape = (?, 24, 24, 32)
+block_0/repeat_0/conv_out,shape = (?, 24, 24, 128)
+block_0/repeat_0/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add:0' shape=(?, 24, 24, 128) dtype=float32>>
+block_0/repeat_1 start......
+block_0/repeat_1/conv_in,shape = (?, 24, 24, 32)
+block_0/repeat_1/conv_bottleneck,shape = (?, 24, 24, 32)
+block_0/repeat_1/conv_out,shape = (?, 24, 24, 128)
+block_0/repeat_1/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_1:0' shape=(?, 24, 24, 128) dtype=float32>>
+block_0/repeat_2 start......
+block_0/repeat_2/conv_in,shape = (?, 24, 24, 32)
+block_0/repeat_2/conv_bottleneck,shape = (?, 24, 24, 32)
+block_0/repeat_2/conv_out,shape = (?, 24, 24, 128)
+block_0/repeat_2/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_2:0' shape=(?, 24, 24, 128) dtype=float32>>
+===========================================================
+Next Block (Upscale)
+block_0/conv_upscale,shape = (?, 24, 24, 256)
+block_1/repeat_0 start......
+block_1/repeat_0/conv_in,shape = (?, 24, 24, 64)
+block_1/repeat_0/conv_bottleneck,shape = (?, 24, 24, 64)
+block_1/repeat_0/conv_out,shape = (?, 24, 24, 256)
+block_1/repeat_0/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_3:0' shape=(?, 24, 24, 256) dtype=float32>>
+block_1/repeat_1 start......
+block_1/repeat_1/conv_in,shape = (?, 24, 24, 64)
+block_1/repeat_1/conv_bottleneck,shape = (?, 24, 24, 64)
+block_1/repeat_1/conv_out,shape = (?, 24, 24, 256)
+block_1/repeat_1/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_4:0' shape=(?, 24, 24, 256) dtype=float32>>
+block_1/repeat_2 start......
+block_1/repeat_2/conv_in,shape = (?, 24, 24, 64)
+block_1/repeat_2/conv_bottleneck,shape = (?, 24, 24, 64)
+block_1/repeat_2/conv_out,shape = (?, 24, 24, 256)
+block_1/repeat_2/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_5:0' shape=(?, 24, 24, 256) dtype=float32>>
+===========================================================
+Next Block (Upscale)
+block_1/conv_upscale,shape = (?, 24, 24, 512)
+block_2/repeat_0 start......
+block_2/repeat_0/conv_in,shape = (?, 24, 24, 128)
+block_2/repeat_0/conv_bottleneck,shape = (?, 24, 24, 128)
+block_2/repeat_0/conv_out,shape = (?, 24, 24, 512)
+block_2/repeat_0/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_6:0' shape=(?, 24, 24, 512) dtype=float32>>
+block_2/repeat_1 start......
+block_2/repeat_1/conv_in,shape = (?, 24, 24, 128)
+block_2/repeat_1/conv_bottleneck,shape = (?, 24, 24, 128)
+block_2/repeat_1/conv_out,shape = (?, 24, 24, 512)
+block_2/repeat_1/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_7:0' shape=(?, 24, 24, 512) dtype=float32>>
+block_2/repeat_2 start......
+block_2/repeat_2/conv_in,shape = (?, 24, 24, 128)
+block_2/repeat_2/conv_bottleneck,shape = (?, 24, 24, 128)
+block_2/repeat_2/conv_out,shape = (?, 24, 24, 512)
+block_2/repeat_2/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_8:0' shape=(?, 24, 24, 512) dtype=float32>>
+===========================================================
+Next Block (Upscale)
+block_2/conv_upscale,shape = (?, 24, 24, 1024)
+block_3/repeat_0 start......
+block_3/repeat_0/conv_in,shape = (?, 24, 24, 256)
+block_3/repeat_0/conv_bottleneck,shape = (?, 24, 24, 256)
+block_3/repeat_0/conv_out,shape = (?, 24, 24, 1024)
+block_3/repeat_0/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_9:0' shape=(?, 24, 24, 1024) dtype=float32>>
+blI tensorflow/core/common_runtime/gpu/gpu_init.cc:102] Found device 0 with properties: 
+name: Tesla K80
+major: 3 minor: 7 memoryClockRate (GHz) 0.8235
+pciBusID 0000:08:00.0
+Total memory: 11.25GiB
+Free memory: 11.16GiB
+W tensorflow/stream_executor/cuda/cuda_driver.cc:572] creating context when one is currently active; existing: 0x6d47f10
+I tensorflow/core/common_runtime/gpu/gpu_init.cc:102] Found device 1 with properties: 
+name: Tesla K80
+major: 3 minor: 7 memoryClockRate (GHz) 0.8235
+pciBusID 0000:09:00.0
+Total memory: 11.25GiB
+Free memory: 11.16GiB
+I tensorflow/core/common_runtime/gpu/gpu_init.cc:126] DMA: 0 1 
+I tensorflow/core/common_runtime/gpu/gpu_init.cc:136] 0:   Y Y 
+I tensorflow/core/common_runtime/gpu/gpu_init.cc:136] 1:   Y Y 
+I tensorflow/core/common_runtime/gpu/gpu_device.cc:838] Creating TensorFlow device (/gpu:0) -> (device: 0, name: Tesla K80, pci bus id: 0000:08:00.0)
+I tensorflow/core/common_runtime/gpu/gpu_device.cc:838] Creating TensorFlow device (/gpu:1) -> (device: 1, name: Tesla K80, pci bus id: 0000:09:00.0)
+I tensorflow/core/common_runtime/gpu/pool_allocator.cc:244] PoolAllocator: After 2942 get requests, put_count=2461 evicted_count=1000 eviction_rate=0.406339 and unsatisfied allocation rate=0.53739
+I tensorflow/core/common_runtime/gpu/pool_allocator.cc:256] Raising pool_size_limit_ from 100 to 110
+I tensorflow/core/common_runtime/gpu/pool_allocator.cc:244] PoolAllocator: After 3046 get requests, put_count=3055 evicted_count=1000 eviction_rate=0.327332 and unsatisfied allocation rate=0.332896
+I tensorflow/core/common_runtime/gpu/pool_allocator.cc:256] Raising pool_size_limit_ from 256 to 281
+ock_3/repeat_1 start......
+block_3/repeat_1/conv_in,shape = (?, 24, 24, 256)
+block_3/repeat_1/conv_bottleneck,shape = (?, 24, 24, 256)
+block_3/repeat_1/conv_out,shape = (?, 24, 24, 1024)
+block_3/repeat_1/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_10:0' shape=(?, 24, 24, 1024) dtype=float32>>
+block_3/repeat_2 start......
+block_3/repeat_2/conv_in,shape = (?, 24, 24, 256)
+block_3/repeat_2/conv_bottleneck,shape = (?, 24, 24, 256)
+block_3/repeat_2/conv_out,shape = (?, 24, 24, 1024)
+block_3/repeat_2/merge,shape = <bound method Tensor.get_shape of <tf.Tensor 'add_11:0' shape=(?, 24, 24, 1024) dtype=float32>>
+===========================================================
+Next Block (Upscale)
+Average Pool,shape = (?, 1, 1, 1024)
+After residual network shape = (?, 1024)
+============================LSTM==================================
+LSTM Layer n_inputs=1024
+After LSTM layer dynamic run,output shape = (10, 24, 384)
+...... initializating varibale ...... 
+...... start to training ......
+
+----epoch:0,training acc = 0.129496403092
+epoch:0,train_accuracy:0.129496403092,valid_accuracy:0.059999999404
+
+----epoch:1,training acc = 0.0942446047025
+epoch:1,train_accuracy:0.0942446047025,valid_accuracy:0.0550000000745
+
+----epoch:2,training acc = 0.10647482023
+epoch:2,train_accuracy:0.10647482023,valid_accuracy:0.059999999404
+
+----epoch:3,training acc = 0.100719424675
+epoch:3,train_accuracy:0.100719424675,valid_accuracy:0.059999999404
+
+----epoch:4,training acc = 0.112230215999
+epoch:4,train_accuracy:0.112230215999,valid_accuracy:0.059999999404
+
+----epoch:5,training acc = 0.105035971395
+epoch:5,train_accuracy:0.105035971395,valid_accuracy:0.059999999404
+
+----epoch:6,training acc = 0.112230215999
+epoch:6,train_accuracy:0.112230215999,valid_accuracy:0.059999999404
+
+----epoch:7,training acc = 0.126618705207
+epoch:7,train_accuracy:0.126618705207,valid_accuracy:0.059999999404
+
+----epoch:8,training acc = 0.105035971395
+epoch:8,train_accuracy:0.105035971395,valid_accuracy:0.059999999404
+
+----epoch:9,training acc = 0.105755396027
+epoch:9,train_accuracy:0.105755396027,valid_accuracy:0.0550000000745
+
+----epoch:10,training acc = 0.105035971395
+epoch:10,train_accuracy:0.105035971395,valid_accuracy:0.059999999404
+
+----epoch:11,training acc = 0.115827338515
+epoch:11,train_accuracy:0.115827338515,valid_accuracy:0.0550000000745
+
+----epoch:12,training acc = 0.125179856372
+epoch:12,train_accuracy:0.125179856372,valid_accuracy:0.059999999404
+
+----epoch:13,training acc = 0.129496403092
+epoch:13,train_accuracy:0.129496403092,valid_accuracy:0.0550000000745
+
+----epoch:14,training acc = 0.132374100977
+epoch:14,train_accuracy:0.132374100977,valid_accuracy:0.059999999404
+
+----epoch:15,training acc = 0.115107913883
+epoch:15,train_accuracy:0.115107913883,valid_accuracy:0.0550000000745
+
+----epoch:16,training acc = 0.132374100977
+epoch:16,train_accuracy:0.132374100977,valid_accuracy:0.059999999404
+
+----epoch:17,training acc = 0.122302158488
+epoch:17,train_accuracy:0.122302158488,valid_accuracy:0.0550000000745
+
+----epoch:18,training acc = 0.132374100977
+epoch:18,train_accuracy:0.132374100977,valid_accuracy:0.059999999404
+
+----epoch:19,training acc = 0.143884892301
+epoch:19,train_accuracy:0.143884892301,valid_accuracy:0.0550000000745
+
+----epoch:20,training acc = 0.146762590185
+epoch:20,train_accuracy:0.146762590185,valid_accuracy:0.059999999404
+
+----epoch:21,training acc = 0.158992806141
+epoch:21,train_accuracy:0.158992806141,valid_accuracy:0.0550000000745
+
+----epoch:22,training acc = 0.161151079394
+epoch:22,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:23,training acc = 0.166187050746
+epoch:23,train_accuracy:0.166187050746,valid_accuracy:0.0550000000745
+
+----epoch:24,training acc = 0.15395683479
+epoch:24,train_accuracy:0.15395683479,valid_accuracy:0.059999999404
+
+----epoch:25,training acc = 0.17338129535
+
+----epoch:26,training acc = 0.15395683479
+epoch:26,train_accuracy:0.15395683479,valid_accuracy:0.059999999404
+
+----epoch:27,training acc = 0.180575539954
+epoch:27,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:28,training acc = 0.161151079394
+epoch:28,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:29,training acc = 0.180575539954
+epoch:29,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:30,training acc = 0.161151079394
+epoch:30,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:31,training acc = 0.180575539954
+epoch:31,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:32,training acc = 0.161151079394
+epoch:32,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:33,training acc = 0.180575539954
+epoch:33,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:34,training acc = 0.161151079394
+epoch:34,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:35,training acc = 0.180575539954
+epoch:35,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:36,training acc = 0.161151079394
+epoch:36,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:37,training acc = 0.180575539954
+epoch:37,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:38,training acc = 0.161151079394
+epoch:38,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:39,training acc = 0.180575539954
+epoch:39,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:40,training acc = 0.161151079394
+epoch:40,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:41,training acc = 0.180575539954
+epoch:41,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:42,training acc = 0.161151079394
+epoch:42,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:43,training acc = 0.180575539954
+epoch:43,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:44,training acc = 0.161151079394
+epoch:44,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:45,training acc = 0.180575539954
+epoch:45,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:46,training acc = 0.161151079394
+epoch:46,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:47,training acc = 0.180575539954
+epoch:47,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:48,training acc = 0.161151079394
+epoch:48,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:49,training acc = 0.180575539954
+epoch:49,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:50,training acc = 0.161151079394
+epoch:50,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:51,training acc = 0.180575539954
+epoch:51,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:52,training acc = 0.161151079394
+epoch:52,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:53,training acc = 0.180575539954
+epoch:53,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:54,training acc = 0.161151079394
+epoch:54,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:55,training acc = 0.180575539954
+epoch:55,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:56,training acc = 0.161151079394
+epoch:56,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:58,training acc = 0.161151079394
+epoch:58,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:59,training acc = 0.180575539954
+epoch:59,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:60,training acc = 0.161151079394
+epoch:60,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:61,training acc = 0.180575539954
+epoch:61,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:62,training acc = 0.161151079394
+epoch:62,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:63,training acc = 0.180575539954
+epoch:63,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:64,training acc = 0.161151079394
+epoch:64,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:65,training acc = 0.180575539954
+epoch:65,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:66,training acc = 0.161151079394
+epoch:66,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:67,training acc = 0.180575539954
+epoch:67,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:68,training acc = 0.161151079394
+epoch:68,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:69,training acc = 0.180575539954
+epoch:69,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:70,training acc = 0.161151079394
+epoch:70,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:71,training acc = 0.180575539954
+epoch:71,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:72,training acc = 0.161151079394
+epoch:72,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:73,training acc = 0.180575539954
+epoch:73,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:74,training acc = 0.161151079394
+epoch:74,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:75,training acc = 0.180575539954
+epoch:75,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:76,training acc = 0.161151079394
+epoch:76,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:77,training acc = 0.180575539954
+epoch:77,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:78,training acc = 0.161151079394
+epoch:78,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:79,training acc = 0.180575539954
+epoch:79,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:80,training acc = 0.161151079394
+epoch:80,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:81,training acc = 0.180575539954
+epoch:81,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:82,training acc = 0.161151079394
+epoch:82,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:83,training acc = 0.180575539954
+epoch:83,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:84,training acc = 0.161151079394
+epoch:84,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:85,training acc = 0.180575539954
+epoch:85,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:86,training acc = 0.161151079394
+epoch:86,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:87,training acc = 0.180575539954
+epoch:87,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:88,training acc = 0.161151079394
+epoch:88,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:89,training acc = 0.180575539954
+epoch:89,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:90,training acc = 0.161151079394
+epoch:90,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:91,training acc = 0.180575539954
+epoch:91,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:92,training acc = 0.161151079394
+epoch:92,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:93,training acc = 0.180575539954
+epoch:93,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:94,training acc = 0.161151079394
+epoch:94,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:95,training acc = 0.180575539954
+epoch:95,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:96,training acc = 0.161151079394
+epoch:96,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:97,training acc = 0.180575539954
+epoch:97,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+
+----epoch:98,training acc = 0.161151079394
+epoch:98,train_accuracy:0.161151079394,valid_accuracy:0.059999999404
+
+----epoch:99,training acc = 0.180575539954
+epoch:99,train_accuracy:0.180575539954,valid_accuracy:0.0550000000745
+...... training finished ......
+...... best accuracy0.0 ......
