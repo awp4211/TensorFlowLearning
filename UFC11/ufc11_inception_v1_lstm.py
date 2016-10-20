@@ -11,7 +11,7 @@ UFC11 dataset contains 1600 videos and hava been classified 11 classes
 
 import tensorflow as tf
 import sys
-import numpy as np
+import process_data as pd
 
 # Dataset count
 n_train_example = 33528
@@ -19,6 +19,7 @@ n_test_example = 4872
 
 # Network Parameter
 learning_rate = 0.001
+dropout_keep_prob = 0.8
 
 pic_batch_size = 2400 # % fps == 0
 fps = 24
@@ -85,6 +86,7 @@ Returns:
 def inception_v1(x,
                  width,
                  height,
+                 dropout_keep_prob=0.8
                  ):
     with tf.name_scope('Input_reshape'):
         # x[pic_batch_size,width*height] ==> [pic_batch_size,width,height,1]
@@ -575,13 +577,40 @@ def inception_v1(x,
                               padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
         
-    print net.get_shape()
+    print('After Inception size = {0}'.format(net.get_shape()))
     #over
     #===========================DEBUG=========================================
     # input width = 224,height = 224 ===> net.shape = [batch,7,7,1024]
     # input width = 192,height = 192 ===> net.shape = [batch,6,6,1024]
     # input witdh = 160,height = 160 ===> net.shape = [batch,5,5,1024]
     #===========================DEBUG=========================================
+    
+    # avg_pool
+    with tf.name_scope('Average_pool'):
+        net = tf.nn.avg_pool(net,
+                             ksize=[1,net.get_shape().as_list()[1],
+                                      net.get_shape().as_list()[1],1],
+                             strides=[1,1,1,1],
+                             padding='VALID')
+    print('After avg pool size = {0}'.format(net.get_shape()))
+    
+        
+    with tf.name_scope('Flatten_layer'):
+        net = tf.reshape(
+            net,
+            [-1, net.get_shape().as_list()[1] *
+             net.get_shape().as_list()[2] *
+             net.get_shape().as_list()[3]])
+   
+        
+    # Dropout
+    with tf.name_scope('Dropout'):
+        net = tf.nn.dropout(net,keep_prob=dropout_keep_prob)
+        
+        
+    print('After Inception net size = {0}'.format(net.get_shape()))
+    return net
+            
     
 
 """    
@@ -636,51 +665,119 @@ def lstm_layer(x):
         #(n_classes=11,)
         'out':tf.Variable(tf.constant(0.1,shape=[n_classes,]))
     }
+    with tf.name_scope('LSMT_reshape'):
+        # x[pic_batch,n_inputs] ==> [video_batch_size,fps,n_inputs]
+        x = tf.reshape(x,[-1,fps,n_inputs])
+        # x[video_batch_size,fps,n_inputs] ==> [video_batch_size * fps,n_inputs]
+        x = tf.reshape(x,[-1,n_inputs])
     
-    # x[pic_batch,n_inputs] ==> [video_batch_size,fps,n_inputs]
-    x = tf.reshape(x,[-1,fps,n_inputs])
-    # x[video_batch_size,fps,n_inputs] ==> [video_batch_size * fps,n_inputs]
-    x = tf.reshape(x,[-1,n_inputs])
-    # x_in ==> (video_batch_size * fps,n_hidden_units)
-    x_in = tf.matmul(x,weights['in']) + biases['in']
-    # x_in ==> (video_batch_size,fps,n_hidden_units)
-    x_in = tf.reshape(x_in,[-1,fps,n_hidden_units])
+    with tf.name_scope('LSTM_upscale'):
+        # x_in ==> (video_batch_size * fps,n_hidden_units)
+        x_in = tf.matmul(x,weights['in']) + biases['in']
+        # x_in ==> (video_batch_size,fps,n_hidden_units)
+        x_in = tf.reshape(x_in,[-1,fps,n_hidden_units])
     
-    # cell
-    # forget_bias = 1.0 represents all information can through lstm
-    lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden_units,
-                                            forget_bias=1.0,
-                                            state_is_tuple=True)
-    _init_state = lstm_cell.zero_state(video_batch_size,dtype=tf.float32)
-    outputs,states = tf.nn.dynamic_rnn(lstm_cell,
-                                       x_in,
-                                       initial_state=_init_state,
-                                       time_major=False
-                                       )
-    #==================================DUBUG===================================
-                                       
-    #[10,24,128][video_batch_size,fps,n_hidden_units]
-    print('After LSTM layer dynamic run,output shape = {0}'.format(outputs.get_shape()))
-    outputs = tf.unpack(tf.transpose(outputs,[1,0,2]))
+    with tf.name_scope('LSTM_cell'):
+        # cell
+        # forget_bias = 1.0 represents all information can through lstm
+        lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden_units,
+                                                forget_bias=1.0,
+                                                state_is_tuple=True)
+        _init_state = lstm_cell.zero_state(video_batch_size,dtype=tf.float32)
+        outputs,states = tf.nn.dynamic_rnn(lstm_cell,
+                                           x_in,
+                                           initial_state=_init_state,
+                                           time_major=False
+                                           )
+        #==================================DUBUG===================================
+                                           
+        #[10,24,128][video_batch_size,fps,n_hidden_units]
+        print('After LSTM layer dynamic run,output shape = {0}'.format(outputs.get_shape()))
+        outputs = tf.unpack(tf.transpose(outputs,[1,0,2]))
     
-    results = tf.matmul(outputs[-1],weights['out']) + biases['out']
+    with tf.name_scope('LSTM_downscale'):
+        results = tf.matmul(outputs[-1],weights['out']) + biases['out']
+
+    with tf.name_scope('SoftMax'):
+        results = tf.nn.softmax(results)
     return results
         
  
 def train_inception_v1_lstm(width,height):
-    x = tf.placeholder(tf.float32,[None,width*height])
-    x = tf.reshape(x,[-1,width,height])
-    y_inception = inception_v1(x,width,height)
+    
+    print('...... loading the dataset ......')
+    train_set_x,train_set_y,test_set_x,test_set_y = pd.load_data_set(width,height)
+    
+    x = tf.placeholder(tf.float32,[None,width*height]) # input
+    y = tf.placeholder(tf.float32,[None,n_classes])    # label
+    keep_prob = tf.placeholder(tf.float32)             # dropout_keep_prob
+    
+    y_inception = inception_v1(x,width,height,keep_prob)
+    y_pred = lstm_layer(y_inception)
+    
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
+    
+    correct_prediction = tf.equal(tf.argmax(y_pred,1),tf.argmax(y,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+
+    best_acc = 0.
+    
+    init = tf.initialize_all_variables()
+    with tf.Session() as sess:
+        print('...... initializating varibale ...... ')
+        sess.run(init)
+        
+        n_epochs = 100
+        print('...... start to training ......')
+        for epoch_i in range(n_epochs):
+            # Training 
+            train_accuracy = 0.
+            for batch_i in range(n_train_example//pic_batch_size):
+                
+                batch_xs = train_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
+                batch_ys = train_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
+                _,loss,acc = sess.run([optimizer,cost,accuracy],
+                                           feed_dict={
+                                                x:batch_xs,
+                                                y:batch_ys,
+                                                keep_prob:dropout_keep_prob}
+                                                )
+                #print('epoch:{0},minibatch:{1},y_res:{2}'.format(epoch_i,batch_i,yy_res))
+                #print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy_pred))
+                print('epoch:{0},minibatch:{1},cost:{2},train_accuracy:{3}'.format(epoch_i,batch_i,loss,acc))
+                train_accuracy += acc
+
+            train_accuracy /= (n_train_example//pic_batch_size)
+            print('----epoch:{0},training acc = {1}'.format(epoch_i,train_accuracy))
+            
+            # Validation
+            valid_accuracy = 0.
+            for batch_i in range(n_test_example//pic_batch_size):
+                batch_xs = test_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
+                batch_ys = test_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
+                valid_accuracy += sess.run(accuracy,
+                                           feed_dict={
+                                                x:batch_xs,
+                                                y:batch_ys,
+                                                keep_prob:1.0})
+            valid_accuracy /= (n_test_example//pic_batch_size)
+            print('epoch:{0},train_accuracy:{1},valid_accuracy:{2}'.format(epoch_i,train_accuracy,valid_accuracy))
+            if(train_accuracy > best_acc):
+                best_acc = train_accuracy
+    
+    print('...... training finished ......')
+    print('...... best accuracy{0} ......'.format(best_acc))
     
     
 if __name__ == '__main__':
     
     if sys.argv[1]:
         if sys.argv[2]:
-            print('...... training inception v1 and blstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+            print('...... training inception v1 and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
             w = int(sys.argv[1])
             h = int(sys.argv[2])
             train_inception_v1_lstm(width=w,height=h)
     else:      
-        print('...... training inception v1 and blstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+        print('...... training inception v1 and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
         train_inception_v1_lstm()
