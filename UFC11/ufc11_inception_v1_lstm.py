@@ -610,38 +610,6 @@ def inception_v1(x,
         
     print('After Inception net size = {0}'.format(net.get_shape()))
     return net
-            
-    
-
-"""    
-def inception_v1(inputs,
-                 num_classes=1000,
-                 is_training=True,
-                 dropout_keep_prob=0.8,
-                 prediction_fn=slim.softmax,
-                 spatial_squeeze=True,
-                 reuse=None,
-                 scope='InceptionV1'):
-    # Final pooling and prediction
-    with tf.variable_scope(scope, 'InceptionV1', [inputs, num_classes],
-                         reuse=reuse) as scope:
-        with slim.arg_scope([slim.batch_norm, slim.dropout],
-                        is_training=is_training):
-            net, end_points = inception_v1_base(inputs, scope=scope)
-            with tf.variable_scope('Logits'):
-                net = slim.avg_pool2d(net, [7, 7], stride=1, scope='MaxPool_0a_7x7')
-                net = slim.dropout(net,dropout_keep_prob, scope='Dropout_0b')
-                logits = slim.conv2d(net, num_classes, [1, 1], 
-                                     activation_fn=None,
-                                     normalizer_fn=None, 
-                                     scope='Conv2d_0c_1x1')
-            if spatial_squeeze:
-                logits = tf.squeeze(logits, [1, 2], name='SpatialSqueeze')
-
-            end_points['Logits'] = logits
-            end_points['Predictions'] = prediction_fn(logits, scope='Predictions')
-    return logits, end_points
-"""
 
 def lstm_layer(x):
     print('============================LSTM==================================')
