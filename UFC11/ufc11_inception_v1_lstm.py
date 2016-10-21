@@ -670,7 +670,13 @@ def lstm_layer(x):
         results = tf.nn.softmax(results)
     return results
         
- 
+
+def test_net(width,height):
+    x = tf.placeholder(tf.float32,[None,width*height])
+    y_inception = inception_v1(x,width,height)
+    y_pred = lstm_layer(y_inception)
+    
+    
 def train_inception_v1_lstm(width,height):
     
     print('...... loading the dataset ......')
@@ -742,10 +748,13 @@ if __name__ == '__main__':
     
     if sys.argv[1]:
         if sys.argv[2]:
-            print('...... training inception v1 and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
             w = int(sys.argv[1])
             h = int(sys.argv[2])
-            train_inception_v1_lstm(width=w,height=h)
+            if len(sys.argv) ==4:#third parameter is the way to test
+                test_net(width=w,height=h)
+            else:
+                print('...... training inception v1 and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+                train_inception_v1_lstm(width=w,height=h)
     else:      
         print('...... training inception v1 and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
         train_inception_v1_lstm()
