@@ -274,7 +274,7 @@ def train_res_blstm(width=256,height=256):
                 print('epoch:{0},minibatch:{1},cost:{2},train_accuracy:{3}'.format(epoch_i,batch_i,loss,acc))
                 train_accuracy += acc
 
-            train_accuracy /= (n_test_example//pic_batch_size)
+            train_accuracy /= (n_train_example//pic_batch_size)
             print('epoch:{0},training acc = {1}'.format(epoch_i,train_accuracy))
             
             # Validation
