@@ -306,6 +306,7 @@ if __name__ == '__main__':
     
     if sys.argv[1]:
         if sys.argv[2]:
+            # customer
             print('...... training res and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
             w = int(sys.argv[1])
             h = int(sys.argv[2])
