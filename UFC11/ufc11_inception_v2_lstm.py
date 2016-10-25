@@ -75,5 +75,14 @@ def inception_v2(x,
     with tf.name_scope('Image Reshape'):
         x = tf.reshape(x,[-1,width,height],1)
     
-    with tf.name_scope()
+    with tf.name_scope('Conv2d_1a_7x7'):
+        x = conv2d(x,n_filters=64,
+                   k_h=7,k_w=7,
+                   stride_h=2,stride_w=2,
+                   stddev=1.0,
+                   padding='SAME',
+                   name='Conv2d_1a_7x7'
+                   )
+        
+        
 
