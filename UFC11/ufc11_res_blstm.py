@@ -255,7 +255,7 @@ def train_res_blstm(width=256,height=256):
         print('...... initializating varibale ...... ')
         sess.run(init)
         
-        n_epochs = 5
+        n_epochs = 100
         print('...... start to training ......')
         for epoch_i in range(n_epochs):
             # Training 
