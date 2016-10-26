@@ -116,6 +116,8 @@ def inception_v2(x,
                              strides=[1,2,2,1],
                              name='MaxPool_3a_3x3')
     
+        
+    # 28 x 28 x 192 => 28 x 28 x 256
     name = 'Mixed_3b'
     with tf.name_scope(name):
         with tf.name_scope(name+'/Branch_0'):
@@ -156,4 +158,362 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0c_3x3_b2')
         with tf.name_scope(name+'/Branch_3'):
-            
+            branch_3 = tf.nn.avg_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,1,1,1],
+                                      padding='SAME')
+            branch_3 = conv2d(branch_3,n_filters=32,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_1x1_b3')
+        net = tf.concat(3,[branch_0,branch_1,branch_2,branch_3])
+    
+    # 28 x 28 x 256 => 28 x 28 x 320
+    name='Mixed_3c'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=64,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b0')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=64,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=96,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = conv2d(net,n_filters=64,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b2')
+            branch_2 = conv2d(branch_2,n_filters=96,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b2')
+            branch_2 = conv2d(branch_2,n_filters=96,
+                              k_h=3,k_w=3,
+                              stride_h=2,stride_w=2,
+                              padding='SAME',
+                              name=name+'/Conv2d_0c_3x3_b2')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = tf.nn.avg_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,1,1,1],
+                                      padding='SAME')
+            branch_3 = conv2d(branch_3,n_filters=64,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_1x1_b3')
+        net = tf.concat(3,[branch_0,branch_1,branch_2,branch_3])
+     
+    # 28 x 28 x 320 => 14 x 14 x 576
+    name='Mixed_4a'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b0')
+            branch_0 = conv2d(net,n_filters=160,
+                              k_h=3,k_w=3,
+                              stride_h=2,stride_w=2,
+                              padding='SAME',
+                              name=name+'/Conv2d_1a_3x3_b0')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=64,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=96,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+            branch_1 = conv2d(branch_1,n_filters=96,
+                              k_h=3,k_w=3,
+                              stride_h=2,stride_w=2,
+                              padding='SAME',
+                              name=name+'/Conv2d_1a_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = tf.nn.max_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,2,2,1],
+                                      padding='SAME')
+        net = tf.concat(3,[branch_0,branch_1,branch_2])
+    
+    # 14 x 14 x 576 => 14 x 14 x 576
+    name='Mixed_4b'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=224,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b0')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=64,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=96,
+                              k_h=3,k_w=3,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = conv2d(net,n_filters=96,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b2')
+            branch_2 = conv2d(branch_2,n_filters=128,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b2')
+            branch_2 = conv2d(branch_2,n_filters=128,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0c_3x3_b2')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = tf.nn.avg_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,1,1,1],
+                                      padding='SAME')
+            branch_3 = conv2d(branch_3,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_1x1_b3')
+        net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    
+    # 14 x 14 x 576 => 14 x 14 x 576
+    name= 'Mixed_4c'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=192,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b0')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=96,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=128,
+                              k_h=3,k_w=3,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = conv2d(net,n_filters=96,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b2')
+            branch_2 = conv2d(branch_2,n_filters=128,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b2')
+            branch_2 = conv2d(branch_2,n_filters=128,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0c_3x3_b2')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = tf.nn.avg_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,1,1,1],
+                                      padding='SAME')
+            branch_3 = conv2d(branch_3,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_1x1_b3')
+        net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    
+    # 14 x 14 x 576 => 14 x 14 x 576
+    name='Mixed_4d'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=160,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b0')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=160,
+                              k_h=3,k_w=3,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = conv2d(net,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b2')
+            branch_2 = conv2d(branch_2,n_filters=160,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b2')
+            branch_2 = conv2d(branch_2,n_filters=160,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0c_3x3_b2')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = tf.nn.avg_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,1,1,1],
+                                      padding='SAME')
+            branch_3 = conv2d(branch_3,n_filters=96,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_1x1_b3')
+        net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+        
+    # 14 x 14 x 576 => 14 x 14 x 576
+    name='Mixed_4e'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=96,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b0')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=192,
+                              k_h=3,k_w=3,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = conv2d(net,n_filters=160,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b2')
+            branch_2 = conv2d(branch_2,n_filters=192,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b2')
+            branch_2 = conv2d(branch_2,n_filters=192,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0c_3x3_b2')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = tf.nn.avg_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,1,1,1],
+                                      padding='SAME')
+            branch_3 = conv2d(branch_3,n_filters=96,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_1x1_b3')
+        net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    
+    # 14 x 14 x 576 => 7 x 7 x 1024
+    name='Mixed_5a'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_1a_3x3_b0')
+            branch_0 = conv2d(branch_0,n_filters=192,
+                              k_h=2,k_w=2,
+                              stride_h=2,stride_w=2,
+                              padding='SAME',
+                              name=name+'/Conv2d_1a_3x3_b0')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=192,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=256,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+            branch_1 = conv2d(branch_1,n_filters=256,
+                              k_h=3,k_w=3,
+                              stride_h=2,stride_w=2,
+                              padding='SAME',
+                              name=name+'/Conv2d_1a_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = tf.nn.max_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,2,2,1],
+                                      padding='SAME')
+        net = tf.concat(3, [branch_0, branch_1, branch_2])
+    
+    # 7 x 7 x 1024 => 7 x 7 x 1024
+    name='Mixed_5b'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=352,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=192,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=320,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = tf.nn.max_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,2,2,1],
+                                      padding='SAME')
+        net = tf.concat(3, [branch_0, branch_1, branch_2])
