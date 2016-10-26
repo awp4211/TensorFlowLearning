@@ -1,2 +1,5 @@
 *.pickle
 /UFC11/UFC11/
+/Yawn/dataset/
+*.zip
+*.npy
