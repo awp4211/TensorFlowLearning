@@ -72,8 +72,9 @@ def inception_v2(x,
                  width,
                  height,
                  dropout_keep_prob):
-    with tf.name_scope('Image Reshape'):
-        x = tf.reshape(x,[-1,width,height],1)
+    with tf.name_scope('Image_Reshape'):
+        x = tf.reshape(x,[-1,width,height,1])
+    print('Image reshape,shape={0}'.format(x.get_shape()))
     
     # 224 x 224 x 1 => 112 x 112 x 64
     # image shape = shape / 2
@@ -83,8 +84,9 @@ def inception_v2(x,
                    stride_h=2,stride_w=2,
                    stddev=1.0,
                    padding='SAME',
-                   name='Conv2d_1a_7x7'
-                   )
+                   name='Conv2d_1a_7x7')
+    print('Conv2d_1a_7x7,shape={0}'.format(net.get_shape()))
+        
     # 112 x 112 x 64 => 56 x 56 x 64
     # image shape = shape / 2
     with tf.name_scope('MaxPool_2a_3x3'):
@@ -92,7 +94,8 @@ def inception_v2(x,
                              ksize=[1,3,3,1],
                              strides=[1,2,2,1],
                              padding='SAME')    
-    
+    print('MaxPool_2a_3x3,shape={0}'.format(net.get_shape()))
+        
     # 56 x 56 x 64 => 56 x 56 x 64
     with tf.name_scope('Conv2d_2b_1x1'):
         net = conv2d(net,n_filters=64,
@@ -101,6 +104,7 @@ def inception_v2(x,
                      padding='SAME',
                      name='Conv2d_2b_1x1')
     
+        
     # 56 x 56 x 64 => 56 x 56 x 192
     with tf.name_scope('Conv2d_2c_3x3'):
         net = conv2d(net,n_filters=192,
@@ -114,7 +118,7 @@ def inception_v2(x,
     with tf.name_scope('MaxPool_3a_3x3'):
         net = tf.nn.max_pool(net,ksize=[1,3,3,1],
                              strides=[1,2,2,1],
-                             name='MaxPool_3a_3x3')
+                             padding='SAME')
     
         
     # 28 x 28 x 192 => 28 x 28 x 256
@@ -204,7 +208,7 @@ def inception_v2(x,
                               name=name+'/Conv2d_0b_3x3_b2')
             branch_2 = conv2d(branch_2,n_filters=96,
                               k_h=3,k_w=3,
-                              stride_h=2,stride_w=2,
+                              stride_h=1,stride_w=1,
                               padding='SAME',
                               name=name+'/Conv2d_0c_3x3_b2')
         with tf.name_scope(name+'/Branch_3'):
@@ -275,6 +279,7 @@ def inception_v2(x,
                               name=name+'/Conv2d_0a_1x1_b1')
             branch_1 = conv2d(branch_1,n_filters=96,
                               k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
                               padding='SAME',
                               name=name+'/Conv2d_0b_3x3_b1')
         with tf.name_scope(name+'/Branch_2'):
@@ -324,6 +329,7 @@ def inception_v2(x,
                               name=name+'/Conv2d_0a_1x1_b1')
             branch_1 = conv2d(branch_1,n_filters=128,
                               k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
                               padding='SAME',
                               name=name+'/Conv2d_0b_3x3_b1')
         with tf.name_scope(name+'/Branch_2'):
@@ -373,6 +379,7 @@ def inception_v2(x,
                               name=name+'/Conv2d_0a_1x1_b1')
             branch_1 = conv2d(branch_1,n_filters=160,
                               k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
                               padding='SAME',
                               name=name+'/Conv2d_0b_3x3_b1')
         with tf.name_scope(name+'/Branch_2'):
@@ -422,6 +429,7 @@ def inception_v2(x,
                               name=name+'/Conv2d_0a_1x1_b1')
             branch_1 = conv2d(branch_1,n_filters=192,
                               k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
                               padding='SAME',
                               name=name+'/Conv2d_0b_3x3_b1')
         with tf.name_scope(name+'/Branch_2'):
@@ -462,7 +470,7 @@ def inception_v2(x,
                               stride_h=1,stride_w=1,
                               stddev=0.09,
                               padding='SAME',
-                              name=name+'/Conv2d_1a_3x3_b0')
+                              name=name+'/Conv2d_0a_1x1_b0')
             branch_0 = conv2d(branch_0,n_filters=192,
                               k_h=2,k_w=2,
                               stride_h=2,stride_w=2,
@@ -499,7 +507,7 @@ def inception_v2(x,
                               k_h=1,k_w=1,
                               stride_h=1,stride_w=1,
                               padding='SAME',
-                              name=name+'/Conv2d_0a_1x1')
+                              name=name+'/Conv2d_0a_1x1_b0')
         with tf.name_scope(name+'/Branch_1'):
             branch_1 = conv2d(net,n_filters=192,
                               k_h=1,k_w=1,
@@ -513,7 +521,106 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_3x3_b1')
         with tf.name_scope(name+'/Branch_2'):
-            branch_2 = tf.nn.max_pool(net,ksize=[1,3,3,1],
-                                      strides=[1,2,2,1],
+            branch_2 = conv2d(net,n_filters=160,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b2')
+            branch_2 = conv2d(branch_2,n_filters=224,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b2')
+            branch_2 = conv2d(branch_2,n_filters=224,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0c_3x3_b2')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = tf.nn.avg_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,1,1,1],
                                       padding='SAME')
-        net = tf.concat(3, [branch_0, branch_1, branch_2])
+            branch_3 = conv2d(branch_3,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_1x1_b3')
+        net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    
+    # 7 x 7 x 1024 => 7 x 7 x 1024
+    name='Mixed_5c'
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = conv2d(net,n_filters=352,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b0')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=192,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b1')
+            branch_1 = conv2d(branch_1,n_filters=320,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = conv2d(net,n_filters=192,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.09,
+                              padding='SAME',
+                              name=name+'/Conv2d_0a_1x1_b2')
+            branch_2 = conv2d(branch_2,n_filters=224,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_3x3_b2')
+            branch_2 = conv2d(branch_2,n_filters=224,
+                              k_h=3,k_w=3,
+                              stride_h=1,stride_w=1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0c_3x3_b2')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = tf.nn.max_pool(net,ksize=[1,3,3,1],
+                                      strides=[1,1,1,1],
+                                      padding='SAME')
+            branch_3 = conv2d(branch_3,n_filters=128,
+                              k_h=1,k_w=1,
+                              stride_h=1,stride_w=1,
+                              stddev=0.1,
+                              padding='SAME',
+                              name=name+'/Conv2d_0b_1x1_b3')
+        net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    
+    print('After InceptionV2, shape = {0}'.format(net.get_shape()))
+    return net
+
+    
+
+def test_net_shape(width,height):
+    x = tf.placeholder(tf.float32,[None,width*height])
+    keep_prob = tf.placeholder(tf.float32) 
+    y_inception = inception_v2(x,width,height,keep_prob)
+    
+    
+if __name__ == '__main__':
+    if len(sys.argv) == 3:
+        # python *.py width height
+        w = int(sys.argv[1])
+        h = int(sys.argv[2])
+        print('...... training Inception v2 and LSTM :width={0},height={1}'.format(w,h))
+    elif len(sys.argv) == 4:
+        # python *.py width height test_net_shape
+        w = int(sys.argv[1])
+        h = int(sys.argv[2])
+        print('...... test Inception v2 and LSTM Net shape:width={0},height={1}'.format(w,h))
+        test_net_shape(w,h)
+    else:
+        #len(sys.argv) == 1 python *.py
+        pass
