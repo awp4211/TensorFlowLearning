@@ -2,7 +2,7 @@
 
 """
 Author:XiyouZhaoC
-Going Deeper with Convolution
+Rethinking the Inception Architecture for Computer Vision
     InceptionV1 and LSTM networks
     
 
@@ -103,23 +103,24 @@ def inception_v2(x,
                      stride_h=1,stride_w=1,
                      padding='SAME',
                      name='Conv2d_2b_1x1')
-    
+    print('Conv2d_2b_1x1,shape={0}'.format(net.get_shape()))
         
     # 56 x 56 x 64 => 56 x 56 x 192
     with tf.name_scope('Conv2d_2c_3x3'):
         net = conv2d(net,n_filters=192,
-                     k_h=1,k_w=1,
-                     stride_h=3,stride_w=3,
+                     k_h=3,k_w=3,
+                     stride_h=1,stride_w=1,
                      padding='SAME',
                      name='Conv2d_2c_3x3')
-    
+    print('Conv2d_2c_3x3,shape={0}'.format(net.get_shape()))
+        
     # 56 x 56 x 192 => 28 x 28 x 192
     # image shape = shape / 2
     with tf.name_scope('MaxPool_3a_3x3'):
         net = tf.nn.max_pool(net,ksize=[1,3,3,1],
                              strides=[1,2,2,1],
                              padding='SAME')
-    
+    print('MaxPool_3a_3x3,shape={0}'.format(net.get_shape()))
         
     # 28 x 28 x 192 => 28 x 28 x 256
     name = 'Mixed_3b'
@@ -172,7 +173,8 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_1x1_b3')
         net = tf.concat(3,[branch_0,branch_1,branch_2,branch_3])
-    
+    print('Mixed_3b,shape={0}'.format(net.get_shape()))
+        
     # 28 x 28 x 256 => 28 x 28 x 320
     name='Mixed_3c'
     with tf.name_scope(name):
@@ -222,7 +224,8 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_1x1_b3')
         net = tf.concat(3,[branch_0,branch_1,branch_2,branch_3])
-     
+    print('Mixed_3c,shape={0}'.format(net.get_shape())) 
+        
     # 28 x 28 x 320 => 14 x 14 x 576
     name='Mixed_4a'
     with tf.name_scope(name):
@@ -260,7 +263,8 @@ def inception_v2(x,
                                       strides=[1,2,2,1],
                                       padding='SAME')
         net = tf.concat(3,[branch_0,branch_1,branch_2])
-    
+    print('Mixed_4a,shape={0}'.format(net.get_shape()))
+        
     # 14 x 14 x 576 => 14 x 14 x 576
     name='Mixed_4b'
     with tf.name_scope(name):
@@ -310,7 +314,8 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_1x1_b3')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
-    
+    print('Mixed_4b,shape={0}'.format(net.get_shape()))
+        
     # 14 x 14 x 576 => 14 x 14 x 576
     name= 'Mixed_4c'
     with tf.name_scope(name):
@@ -360,7 +365,8 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_1x1_b3')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
-    
+    print('Mixed_4c,shape={0}'.format(net.get_shape()))
+        
     # 14 x 14 x 576 => 14 x 14 x 576
     name='Mixed_4d'
     with tf.name_scope(name):
@@ -410,6 +416,7 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_1x1_b3')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    print('Mixed_4d,shape={0}'.format(net.get_shape()))
         
     # 14 x 14 x 576 => 14 x 14 x 576
     name='Mixed_4e'
@@ -460,7 +467,8 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_1x1_b3')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
-    
+    print('Mixed_4e,shape={0}'.format(net.get_shape()))
+        
     # 14 x 14 x 576 => 7 x 7 x 1024
     name='Mixed_5a'
     with tf.name_scope(name):
@@ -498,7 +506,8 @@ def inception_v2(x,
                                       strides=[1,2,2,1],
                                       padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2])
-    
+    print('Mixed_5a,shape={0}'.format(net.get_shape()))
+        
     # 7 x 7 x 1024 => 7 x 7 x 1024
     name='Mixed_5b'
     with tf.name_scope(name):
@@ -547,7 +556,8 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_1x1_b3')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
-    
+    print('Mixed_5b,shape={0}'.format(net.get_shape()))
+        
     # 7 x 7 x 1024 => 7 x 7 x 1024
     name='Mixed_5c'
     with tf.name_scope(name):
@@ -597,7 +607,14 @@ def inception_v2(x,
                               padding='SAME',
                               name=name+'/Conv2d_0b_1x1_b3')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
-    
+    print('Mixed_5c,shape={0}'.format(net.get_shape()))
+    #================================DEBUG=====================================
+    # 224*224*1 ===> 7*7*1024 
+    # 192*192*1 ===> 6*6*1024
+    # 160*160*1 ===> 5*5*1024
+    # 128*128*1 ===> 4*4*1024
+    # 96*96*1   ===> 3*3*1024
+    #================================DEBUG=====================================
     print('After InceptionV2, shape = {0}'.format(net.get_shape()))
     return net
 
