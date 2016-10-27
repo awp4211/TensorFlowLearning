@@ -86,7 +86,7 @@ Returns:
 def inception_v1(x,
                  width,
                  height,
-                 dropout_keep_prob=0.8
+                 dropout_keep_prob
                  ):
     with tf.name_scope('Input_reshape'):
         # x[pic_batch_size,width*height] ==> [pic_batch_size,width,height,1]
@@ -670,7 +670,7 @@ def lstm_layer(x):
         results = tf.nn.softmax(results)
     return results
         
-
+# test method
 def test_net(width,height):
     x = tf.placeholder(tf.float32,[None,width*height])
     y_inception = inception_v1(x,width,height)
