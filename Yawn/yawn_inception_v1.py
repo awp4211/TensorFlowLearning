@@ -13,6 +13,7 @@ and 1449 testing examples
 import tensorflow as tf
 import sys
 import process_data as pd
+import datetime
 
 n_train_example = 10340
 n_test_example = 1449
@@ -76,7 +77,6 @@ Returns:
 def inception_v1(x,
                  width,
                  height,
-                 dropout_keep_prob
                  ):
     # x[batch_size,width*height] => [batch_size,width,height,1]
     with tf.name_scope('Input_reshape'):
@@ -589,11 +589,118 @@ def inception_v1(x,
     # input witdh = 160,height = 160 ===> net.shape = [batch,5,5,1024]
     #===========================DEBUG=========================================
         
-    print('After Inception size = {0}'.format(net.get_shape()))        
+    print('After Inception size = {0}'.format(net.get_shape())) 
+    return net       
+
+def prediction(x,dropout_keep_prob):
+    # avg_pool
+    with tf.name_scope('Average_pool'):
+        net = tf.nn.avg_pool(x,
+                             ksize=[1,x.get_shape().as_list()[1],
+                                      x.get_shape().as_list()[1],1],
+                             strides=[1,1,1,1],
+                             padding='VALID')
+    print('After avg pool size = {0}'.format(net.get_shape()))
+    
+    # Dropout
+    with tf.name_scope('Dropout'):
+        net = tf.nn.dropout(net,keep_prob=dropout_keep_prob)
+    print('Dropout,shape={0}'.format(net.get_shape()))
+    
+    # Flatten
+    with tf.name_scope('Flatten_layer'):
+        net = tf.reshape(
+            net,
+            [-1, net.get_shape().as_list()[1] *
+             net.get_shape().as_list()[2] *
+             net.get_shape().as_list()[3]])
+    print('Flatten,shape={0}'.format(net.get_shape()))
+    
+    weights = tf.Variable(tf.random_normal([net.get_shape().as_list()[1],n_class]))
+    biases = tf.Variable(tf.constant(0.1,shape=[n_class,]))
+    
+    # softmax
+    with tf.name_scope('SoftMax'):
+        results = tf.matmul(net,weights)+biases
+        results = tf.nn.softmax(results)
+    print('Result,shape={0}'.format(results.get_shape()))
+    return results
+    
 
 def test_net_shape(width,height):
     x = tf.placeholder(tf.float32,[None,width*height])
-    y_inception = inception_v1(x,width,height,0.8)
+    y_inception = inception_v1(x,width,height)
+    y_pred = prediction(y_inception,0.8)
+    
+def train_inception_v1(width=256,height=256):
+    
+    d_start = datetime.datetime.now()
+    
+    print('...... loading the dataset ......')
+    train_set_x,train_set_y,test_set_x,test_set_y = pd.load_data_set(width,height)
+    
+    x = tf.placeholder(tf.float32,[None,width*height]) # input
+    y = tf.placeholder(tf.float32,[None,n_class])    # label
+    keep_prob = tf.placeholder(tf.float32)             # dropout_keep_prob
+    
+    y_inception = inception_v1(x,width,height)
+    y_pred = prediction(y_inception,keep_prob)
+    
+    cost = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y_pred),reduction_indices=1))
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
+    
+    correct_prediction = tf.equal(tf.argmax(y_pred,1),tf.argmax(y,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+
+    best_acc = 0.
+    
+    init = tf.initialize_all_variables()
+    with tf.Session() as sess:
+        print('...... initializating varibale ...... ')
+        sess.run(init)
+        
+        n_epochs = 100
+        print('...... start to training ......')
+        for epoch_i in range(n_epochs):
+            # Training 
+            train_accuracy = 0.
+            for batch_i in range(n_train_example//batch_size):
+                
+                batch_xs = train_set_x[batch_i*batch_size:(batch_i+1)*batch_size]
+                batch_ys = train_set_y[batch_i*batch_size:(batch_i+1)*batch_size]
+                _,loss,acc = sess.run([optimizer,cost,accuracy],
+                                           feed_dict={
+                                                x:batch_xs,
+                                                y:batch_ys,
+                                                keep_prob:dropout_keep_prob}
+                                                )
+                #print('epoch:{0},minibatch:{1},y_res:{2}'.format(epoch_i,batch_i,yy_res))
+                #print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy_pred))
+                print('epoch:{0},minibatch:{1},cost:{2},train_accuracy:{3}'.format(epoch_i,batch_i,loss,acc))
+                train_accuracy += acc
+
+            train_accuracy /= (n_train_example//batch_size)
+            print('----epoch:{0},training acc = {1}'.format(epoch_i,train_accuracy))
+            
+            # Validation
+            valid_accuracy = 0.
+            for batch_i in range(n_test_example//batch_size):
+                batch_xs = test_set_x[batch_i*batch_size:(batch_i+1)*batch_size]
+                batch_ys = test_set_y[batch_i*batch_size:(batch_i+1)*batch_size]
+                valid_accuracy += sess.run(accuracy,
+                                           feed_dict={
+                                                x:batch_xs,
+                                                y:batch_ys,
+                                                keep_prob:1.0})
+            valid_accuracy /= (n_test_example//batch_size)
+            print('epoch:{0},train_accuracy:{1},valid_accuracy:{2}'.format(epoch_i,train_accuracy,valid_accuracy))
+            if(train_accuracy > best_acc):
+                best_acc = train_accuracy
+    
+    d_end = datetime.datetime.now()
+    print('...... training finished ......')
+    print('...... best accuracy:{0} ......'.format(best_acc))
+    print('...... running time:{0}'.format( (d_end-d_start).seconds))
     
 if __name__ == '__main__':
     if len(sys.argv) == 3:
@@ -601,6 +708,7 @@ if __name__ == '__main__':
         w = int(sys.argv[1])
         h = int(sys.argv[2])
         print('...... training Inception v1:width={0},height={1}'.format(w,h))
+        train_inception_v1(w,h)
     elif len(sys.argv) == 4:
         # python *.py width height test_net_shape
         w = int(sys.argv[1])
