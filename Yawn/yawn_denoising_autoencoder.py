@@ -81,6 +81,7 @@ def classify(inputs):
     result = tf.matmul(inputs,weights) + biases
     result = tf.nn.softmax(result)
 
+    
 def train_yawn(width=256,height=256):
     
     d_start = datetime.datetime.now()
