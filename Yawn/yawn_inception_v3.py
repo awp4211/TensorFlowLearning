@@ -775,8 +775,6 @@ def train_inception_v3(width=256,height=256):
                                                 y:batch_ys,
                                                 keep_prob:dropout_keep_prob}
                                                 )
-                #print('epoch:{0},minibatch:{1},y_res:{2}'.format(epoch_i,batch_i,yy_res))
-                #print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy_pred))
                 print('epoch:{0},minibatch:{1},cost:{2},train_accuracy:{3}'.format(epoch_i,batch_i,loss,acc))
                 train_accuracy += acc
 
