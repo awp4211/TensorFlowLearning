@@ -18,10 +18,11 @@ import datetime
 n_train_example = 10340
 n_test_example = 1449
 
-learning_rate = 0.001
+learning_rate = 0.01
 dropout_keep_prob = 0.8
-batch_size = 100
+batch_size = 200
 n_class = 2
+hidden_units = [512,128]
 
 """
 2D COnvolution with options for kernel size,stride and init deviation
@@ -100,10 +101,11 @@ def inception_v1(x,
                              strides=[1,2,2,1],
                              padding='SAME') 
     print('MaxPool_2a_3x3,shape={0}'.format(net.get_shape()))
-        
+    
     with tf.name_scope('LRN_1'):
         net = tf.nn.lrn(net)
-        
+    
+    
     with tf.name_scope('Conv2d_2b_1x1'):           
         # Conv2d_2b_1*1 1*1 conv stride=1
         net = conv2d(net,n_filters=64,
@@ -121,9 +123,6 @@ def inception_v1(x,
                      name='Conv2d_2c_3x3',
                      padding='SAME')
     print('Conv2d_2c_3x3,shape={0}'.format(net.get_shape()))
-
-    with tf.name_scope('LRN_2'):
-        net = tf.nn.lrn(net)
     
     with tf.name_scope('MaxPool_3a_3x3'):
         # MaxPool_3a_3*3 3*3 MaxPool stride=2 
@@ -132,6 +131,10 @@ def inception_v1(x,
                              strides=[1,2,2,1],
                              padding='SAME')
     print('MaxPool_3a_3x3,shape={0}'.format(net.get_shape()))          
+    
+    
+    with tf.name_scope('LRN_2'):
+        net = tf.nn.lrn(net)
     
     name = 'Mixed_3b'
     with tf.name_scope(name):
@@ -598,7 +601,7 @@ def inception_v1(x,
     print('After Inception size = {0}'.format(net.get_shape())) 
     return net       
 
-def prediction(x,dropout_keep_prob):
+def pool_and_flatten(x,dropout_keep_prob):
     # avg_pool
     with tf.name_scope('Average_pool'):
         net = tf.nn.avg_pool(x,
@@ -621,13 +624,39 @@ def prediction(x,dropout_keep_prob):
              net.get_shape().as_list()[2] *
              net.get_shape().as_list()[3]])
     print('Flatten,shape={0}'.format(net.get_shape()))
+    return net
     
-    weights = tf.Variable(tf.random_normal([net.get_shape().as_list()[1],n_class]))
-    biases = tf.Variable(tf.constant(0.1,shape=[n_class,]))
+def mlp(net,hidden_units=[512,256,128,64]):
+    n_input_size = net.get_shape().as_list()[1]
+    weights = {}
+    biases = {}
+    
+    current_input_size = n_input_size
+    for i in range(len(hidden_units)):
+        w = tf.Variable(tf.random_normal([current_input_size,hidden_units[i]]))
+        b = tf.Variable(tf.constant(0.1,shape=[hidden_units[i],]))
+        weights.setdefault('w_{0}'.format(i),w)
+        biases.setdefault('b_{0}'.format(i),b)
+        current_input_size = hidden_units[i]
+
+    # compute
+    with tf.name_scope('MLP'):
+        current_input = net
+        for i in range(len(hidden_units)):
+            w = weights.get('w_{0}'.format(i))
+            b = biases.get('b_{0}'.format(i))
+            net = tf.add(tf.matmul(current_input,w),b)
+            net = tf.nn.relu(net)
+            current_input = net
+            print('MLP Layer {0},shape={1}'.format(i,net.get_shape()))
+    
+
+    W = tf.Variable(tf.random_normal([net.get_shape().as_list()[1],n_class]))
+    bias = tf.Variable(tf.constant(0.1,shape=[n_class,]))        
     
     # softmax
     with tf.name_scope('SoftMax'):
-        results = tf.matmul(net,weights)+biases
+        results = tf.matmul(net,W)+bias
         results = tf.nn.softmax(results)
     print('Result,shape={0}'.format(results.get_shape()))
     return results
@@ -636,7 +665,8 @@ def prediction(x,dropout_keep_prob):
 def test_net_shape(width,height):
     x = tf.placeholder(tf.float32,[None,width*height])
     y_inception = inception_v1(x,width,height)
-    y_pred = prediction(y_inception,0.8)
+    y_pool = pool_and_flatten(y_inception,0.8)
+    y_pred = mlp(y_pool,hidden_units=[512,256,128,64])
     
 def train_inception_v1(width=256,height=256):
     
@@ -650,9 +680,10 @@ def train_inception_v1(width=256,height=256):
     keep_prob = tf.placeholder(tf.float32)             # dropout_keep_prob
     
     y_inception = inception_v1(x,width,height)
-    y_pred = prediction(y_inception,keep_prob)
+    y_pool = pool_and_flatten(y_inception,keep_prob)
+    y_pred = mlp(y_pool,hidden_units=hidden_units)
     
-    cost = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y_pred),reduction_indices=1))
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
     
     correct_prediction = tf.equal(tf.argmax(y_pred,1),tf.argmax(y,1))
@@ -674,13 +705,12 @@ def train_inception_v1(width=256,height=256):
                 
                 batch_xs = train_set_x[batch_i*batch_size:(batch_i+1)*batch_size]
                 batch_ys = train_set_y[batch_i*batch_size:(batch_i+1)*batch_size]
-                _,loss,acc = sess.run([optimizer,cost,accuracy],
+                _,loss,acc,yy_pred = sess.run([optimizer,cost,accuracy,y_pred],
                                            feed_dict={
                                                 x:batch_xs,
                                                 y:batch_ys,
                                                 keep_prob:dropout_keep_prob}
                                                 )
-                #print('epoch:{0},minibatch:{1},y_res:{2}'.format(epoch_i,batch_i,yy_res))
                 #print('epoch:{0},minibatch:{1},y_pred:{2}'.format(epoch_i,batch_i,yy_pred))
                 print('epoch:{0},minibatch:{1},cost:{2},train_accuracy:{3}'.format(epoch_i,batch_i,loss,acc))
                 train_accuracy += acc
@@ -714,6 +744,14 @@ if __name__ == '__main__':
         w = int(sys.argv[1])
         h = int(sys.argv[2])
         print('...... training Inception v1:width={0},height={1}'.format(w,h))
+        
+        print('=============== Parameters Setting =============================')
+        print('learning_rate = {0}'.format(learning_rate))
+        print('batch_size = {0}'.format(batch_size))
+        print('dropout_keep_prob = {0}'.format(dropout_keep_prob))
+        print('hidden_units = {0}'.format(hidden_units))
+        print('===============================================================')
+
         train_inception_v1(w,h)
     elif len(sys.argv) == 4:
         # python *.py width height test_net_shape
