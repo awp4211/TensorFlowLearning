@@ -18,11 +18,11 @@ import datetime
 n_train_example = 10340
 n_test_example = 1449
 
-learning_rate = 0.01
+learning_rate = 0.1
 dropout_keep_prob = 0.8
 batch_size = 200
 n_class = 2
-hidden_units = [512,128]
+hidden_units = [512]
 
 """
 2D COnvolution with options for kernel size,stride and init deviation
@@ -696,7 +696,7 @@ def train_inception_v1(width=256,height=256):
         print('...... initializating varibale ...... ')
         sess.run(init)
         
-        n_epochs = 100
+        n_epochs = 50
         print('...... start to training ......')
         for epoch_i in range(n_epochs):
             # Training 
@@ -736,7 +736,7 @@ def train_inception_v1(width=256,height=256):
     d_end = datetime.datetime.now()
     print('...... training finished ......')
     print('...... best accuracy:{0} ......'.format(best_acc))
-    print('...... running time:{0}'.format( (d_end-d_start).seconds))
+    print('...... running time:{0} s'.format( (d_end-d_start).seconds))
     
 if __name__ == '__main__':
     if len(sys.argv) == 3:
