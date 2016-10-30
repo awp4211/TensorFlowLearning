@@ -101,6 +101,9 @@ def inception_v1(x,
                              padding='SAME') 
     print('MaxPool_2a_3x3,shape={0}'.format(net.get_shape()))
         
+    with tf.name_scope('LRN_1'):
+        net = tf.nn.lrn(net)
+        
     with tf.name_scope('Conv2d_2b_1x1'):           
         # Conv2d_2b_1*1 1*1 conv stride=1
         net = conv2d(net,n_filters=64,
@@ -118,6 +121,9 @@ def inception_v1(x,
                      name='Conv2d_2c_3x3',
                      padding='SAME')
     print('Conv2d_2c_3x3,shape={0}'.format(net.get_shape()))
+
+    with tf.name_scope('LRN_2'):
+        net = tf.nn.lrn(net)
     
     with tf.name_scope('MaxPool_3a_3x3'):
         # MaxPool_3a_3*3 3*3 MaxPool stride=2 
