@@ -745,7 +745,7 @@ if __name__ == '__main__':
         h = int(sys.argv[2])
         print('...... training Inception v1:width={0},height={1}'.format(w,h))
         
-        print('=============== Parameters Setting =============================')
+        print('=============== Parameters Setting ============================')
         print('learning_rate = {0}'.format(learning_rate))
         print('batch_size = {0}'.format(batch_size))
         print('dropout_keep_prob = {0}'.format(dropout_keep_prob))
