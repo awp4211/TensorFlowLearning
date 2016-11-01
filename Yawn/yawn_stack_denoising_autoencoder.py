@@ -21,6 +21,8 @@ class dA(object):
         self.b_hidden = tf.Variable(tf.constant(0.0,shape=[n_hidden,]))
         self.b_input = tf.Variable(tf.constant(0.0,shape=[n_input,]))
         self.input = net_input
+        self.n_input = n_input
+        self.n_hidden = n_hidden
         
     def get_hidden_values(self,input):
         return tf.nn.sigmoid(tf.matmul(self.input,self.w)+self.b_hidden)
@@ -29,4 +31,9 @@ class dA(object):
         w_t = tf.transpose(self.w)
         return tf.nn.sigmoid(tf.matmul(hidden,w_t)+self.b_input)
         
-    def get 
+    def get_corrupted_input(self,input,corruption_level):
+        mask = np.random.binomial(1,1. - corruption_level,[self.n_input])
+        return tf.mul(mask,input)
+    
+    def cost():
+        
