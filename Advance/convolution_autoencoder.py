@@ -67,6 +67,7 @@ def autoencoder(input_shape=[None,784],
         b = tf.Variable(tf.zeros([n_output]))
         encoder.append(W)
         output = lrelu(tf.add(tf.nn.conv2d(current_input,W,strides=[1,2,2,1],padding='SAME'),b))
+        print('Encoder layer_{0},shape={1}'.format(layer_i,output.get_shape()))
         current_input = output
         
     z = current_input
@@ -91,6 +92,27 @@ def autoencoder(input_shape=[None,784],
     
     return {'x':x,'y':y,'z':z,'cost':cost}
 
+def classify(z,hidden_size=[500,200,10]):
+    current_input = z
+    # flatten
+    current_input = tf.reshape(z,[-1,z.get_shape().as_list()[1],
+                                     z.get_shape().as_list()[2],
+                                     z.get_shape().as_list()[3]])
+    n_input = current_input.get_shape()[1]
+    for layer_i,n_output in enumerate(hidden_size):
+        n_input = current_input.get_shape()[1]
+        weight = tf.Variable(tf.random_normal([n_input,n_output],
+                                              -1.0 / math.sqrt(n_input+n_output),
+                                               1.0 / math.sqrt(n_input+n_output)))
+        bias = tf.Variable(tf.constant(0.1,shape=[n_output,]))
+        output = tf.matmul(weight,current_input)
+        output = tf.add(output,bias)
+        output = tf.nn.sigmoid(output)
+        current_input = output
+    
+    return tf.nn.softmax(current_input)
+    
+        
 def test_mnist():
     """
     Test the convolutional autoencoder using MNIST
