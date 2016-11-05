@@ -40,6 +40,7 @@ def autoencoder(x,
                 dimensions=[784,512,256,64]):
     # current layer input
     current_input = corrupt(x) * corrupt_prob + x * (1 - corrupt_prob)
+    curretn_input = x
     
     dimensions.insert(0,width*height)    
     
