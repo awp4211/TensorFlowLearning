@@ -244,7 +244,7 @@ def train_res_lstm(width=256,height=256):
     x = tf.placeholder(tf.float32,[None,width*height])
     y = tf.placeholder(tf.float32,[None,n_classes])
     y_res = residual_network(x)
-    y_pred = lstm_layer(y_res,3)
+    y_pred = lstm_layer(y_res,5)
     
     # Define loss and training functions
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
