@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-def read_cvst():
+def read_cvst_ori():
     data = []
-    data_file = open('cvst_data.txt')
+    data_file = open('cvst2.txt')
     data_file.readline()
-
+    
     for line in data_file.readlines():
         
         line = line.strip()
         vec = line.split('\t')
+        print(len(vec))
         
         for index,elem in enumerate(vec):
             #==================PAGE1==================
@@ -20,9 +21,11 @@ def read_cvst():
             if index == 5:#perinatalstage
                 if int(elem) == -1:vec[5] = 0.0
                 elif int(elem) == 1 :vec[5] = 1.0
+                else: vec[index] = 0.0
             if (index >5 and index <26):# medical1-13,medicine,contraceptive,faceinfections,otitismedia,mastoiditis,meningitis,nasosinusitis
                 if elem == 'NULL':vec[index]=0.0
                 elif elem == 'on':vec[index]=1.0    
+                else: vec[index] = 0.0
             #==================PAGE2==================
             if index == 26:#headache
                 if int(elem) == 1:vec[index] = 1.0
@@ -30,25 +33,31 @@ def read_cvst():
             if (index > 26 and index < 30):#headachepro1,2,3
                 if elem == 'NULL':vec[index] = 0.0
                 elif elem == 'on':vec[index] = 1.0
+                else: vec[index] = 0.0
             if index == 30:#vomit
                 if int(elem) == -1:vec[index] = 0.0
                 elif int(elem) ==  1:vec[index] = 1.0
+                else: vec[index] = 0.0
             if index == 31:#vomitpro
                 if elem == 'NULL':vec[index] = 0.0
                 elif int(elem) == 1:vec[index] = 1.0
+                else: vec[index] = 0.0
             if index == 32:#awareness
                 vec[index] = (float(elem) +1)/4.
             if index == 33:#epilepsy
                 if int(elem) == -1:vec[index] = 0.0
                 elif int(elem) == 1:vec[index] = 1.0
+                else: vec[index] = 0.0
             if index == 34:#epilepsypro
                 if elem == 'NULL':vec[index] = 0.0
                 elif int(elem) == 0:vec[index] = 0.5
                 elif int(elem) == 1:vec[index] = 1.0
+                else: vec[index] = 0.0
             if index == 35:#temperature
                 if int(elem) == -1:vec[index] = 0.0
                 elif int(elem) == 1:vec[index] = 0.5
                 elif int(elem) == 2:vec[index] = 1.0
+                else: vec[index] = 0.0
             if index == 36:#visiondisorder
                 vec[index] = (float(elem) + 1)/4.
             if index == 37:#facialparalysis
@@ -57,12 +66,14 @@ def read_cvst():
                 if elem == 'NULL':vec[index] = 0.0
                 elif int(elem) == 0:vec[index] = 0.5
                 elif int(elem) == 1:vec[index] = 1.0
+                else: vec[index] = 0.0
             if index == 39:#tinnitus
                 vec[index] = (float(elem) + 1)/2.
             if index == 40:#tinnituspro
                 if elem == 'NULL':vec[index] = 0.0
                 elif int(elem) == 0:vec[index] = 0.5
                 elif int(elem) == 1:vec[index] = 1.0
+                else: vec[index] = 0.0
             if index == 41:#neckdiscomfort
                 if int(elem) == -1:vec[index] = 0.0
                 elif int(elem) ==  1:vec[index] = 1.0
@@ -145,14 +156,23 @@ def read_cvst():
                 if elem == 'NULL':vec[index] = 0.0;continue
                 if elem == '':vec[index] = 0.0;continue
                 vec[index] = (float(elem)) / 40.
-        # PAGE4
+        # PAGE4 NULL
         data.append(vec[3:63])
     return data
         
+def denoising_simple():
+    
+    pass
+    
+def one_hot_encoder(label,class_count):
+    mat = np.asarray(np.zeros(class_count),dtype='float64').reshape(1,class_count)
+    for i in range(class_count):
+        if i == label:
+            mat[0][i] = 1
+    return mat.flatten()
+
 if __name__ == '__main__':
-    data = read_cvst()
+    data = read_cvst_ori()
+    data = np.asarray(data)
     print data
-    for row in range(len(data)):
-        for column in range(len(data[0])):
-            if data[row][column] == '-1':
-                print(row,' ',column,' data ',data[row][column])
+    print data.shape
