@@ -18,10 +18,7 @@ n_train_example = 33528
 n_test_example = 4872
 
 # Network Parameter
-learning_rate = 0.001
-dropout_keep_prob = 0.8
-
-pic_batch_size = 2400 # % fps == 0
+pic_batch_size = 240 # % fps == 0
 fps = 24
 video_batch_size = pic_batch_size / fps
 n_classes = 11
@@ -88,10 +85,13 @@ def inception_v1(x,
                  height,
                  dropout_keep_prob
                  ):
+    print('Image input shape = {0}'.format(x.get_shape()))
     with tf.name_scope('Input_reshape'):
         # x[pic_batch_size,width*height] ==> [pic_batch_size,width,height,1]
         x = tf.reshape(x,[-1,width,height,1])
         tf.image_summary('input',x,11)# TODO
+    print('Image reshape,shape = {0}'.format(x.get_shape()))
+    
     with tf.name_scope('Conv2d_1a_7x7'):
         # 7*7 conv stride = 2
         net = conv2d(x,n_filters=64,
@@ -100,6 +100,7 @@ def inception_v1(x,
                          name='Conv2d_1a_7x7',
                          padding='SAME'
                          )
+    print('Conv2d_1a_7x7,shape = {0}'.format(net.get_shape()))
         
     with tf.name_scope('MaxPool_2a_3x3'):
         # MaxPool_2a_3*3 3*3 maxpool stride=2  
@@ -107,7 +108,8 @@ def inception_v1(x,
                              ksize=[1,3,3,1],
                              strides=[1,2,2,1],
                              padding='SAME')    
-        
+    print('MaxPool_2a_3x3,shape = {0}'.format(net.get_shape()))
+    
     with tf.name_scope('Conv2d_2b_1x1'):           
         # Conv2d_2b_1*1 1*1 conv stride=1
         net = conv2d(net,n_filters=64,
@@ -115,6 +117,7 @@ def inception_v1(x,
                      stride_h=1,stride_w=1,
                      name='Conv2d_2b_1x1',
                      padding='SAME')
+    print('Conv2d_2b_1x1,shape = {0}'.format(net.get_shape()))
     
     with tf.name_scope('Conv2d_2c_3x3'):
         # Conv2d_2c_3*3 3*3 conv stride =1
@@ -123,13 +126,15 @@ def inception_v1(x,
                      stride_h=1,stride_w=1,
                      name='Conv2d_2c_3x3',
                      padding='SAME')
+    print('Conv2d_2c_3x3,shape = {0}'.format(net.get_shape()))
     
     with tf.name_scope('MaxPool_3a_3x3'):
         # MaxPool_3a_3*3 3*3 MaxPool stride=2 
         net = tf.nn.max_pool(net,
                              ksize=[1,3,3,1],
                              strides=[1,2,2,1],
-                             padding='SAME')          
+                             padding='SAME')
+    print('MaxPool_3a_3x3,shape = {0}'.format(net.get_shape()))
     
     name = 'Mixed_3b'
     with tf.name_scope(name):
@@ -179,7 +184,8 @@ def inception_v1(x,
                               padding='SAME')
         
         net = tf.concat(3,[branch_0,branch_1,branch_2,branch_3])
-        
+    print('Mixed_3b,shape = {0}'.format(net.get_shape()))
+    
     # Mixed_3c
     name = 'Mixed_3c'
     with tf.name_scope('Mixed_3c'):
@@ -235,7 +241,8 @@ def inception_v1(x,
         net = tf.nn.max_pool(net,ksize=[1,3,3,1],
                                       strides=[1,2,2,1],
                                       padding='SAME')
-        
+    print('Mixed_3c,shape = {0}'.format(net.get_shape()))
+    
     name = 'Mixed_4b'
     with tf.name_scope(name):
         with tf.name_scope('Branch_0'):
@@ -283,6 +290,7 @@ def inception_v1(x,
                               name=name+'/Conv2d_0b_1x1_b3',
                               padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    print('Mixed_4b,shape = {0}'.format(net.get_shape()))
     
     name = 'Mixed_4c'
     with tf.name_scope(name):
@@ -331,7 +339,8 @@ def inception_v1(x,
                               name=name+'/Conv2d_0b_1x1_b3',
                               padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
-        
+    print('Mixed_4c,shape = {0}'.format(net.get_shape()))
+    
     name = 'Mixed_4d'
     with tf.name_scope(name):
         with tf.name_scope('Branch_0'):
@@ -379,6 +388,7 @@ def inception_v1(x,
                               name=name+'/Conv2d_0b_1x1_b3',
                               padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    print('Mixed_4d,shape = {0}'.format(net.get_shape()))
     
     name = 'Mixed_4e'
     with tf.name_scope(name):
@@ -427,6 +437,7 @@ def inception_v1(x,
                               name=name+'/Conv2d_0b_1x1_b3',
                               padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    print('Mixed_4e,shape = {0}'.format(net.get_shape()))
     
     name = 'Mixed_4f'
     with tf.name_scope(name):
@@ -475,11 +486,13 @@ def inception_v1(x,
                               name=name+'/Conv2d_0b_1x1_b3',
                               padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
+    print('Mixed_4f,shape = {0}'.format(net.get_shape()))
 
     with tf.name_scope('MaxPool_5a_2x2'):
         net = tf.nn.max_pool(net,ksize=[1,2,2,1],#TODO
                                       strides=[1,2,2,1],
                                       padding='SAME')
+    print('MaxPool_5a_2x2,shape = {0}'.format(net.get_shape()))
     
     name = 'Mixed_5b'
     with tf.name_scope(name):
@@ -528,7 +541,8 @@ def inception_v1(x,
                               name=name+'/Conv2d_0b_1x1_b3',
                               padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
-        
+    print('Mixed_5b,shape = {0}'.format(net.get_shape()))
+    
     name = 'Mixed_5c'
     with tf.name_scope(name):
         with tf.name_scope('Branch_0'):
@@ -576,7 +590,8 @@ def inception_v1(x,
                               name=name+'/Conv2d_0b_1x1_b3',
                               padding='SAME')
         net = tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
-        
+    print('Mixed_5c,shape = {0}'.format(net.get_shape())) 
+     
     print('After Inception size = {0}'.format(net.get_shape()))
     #over
     #===========================DEBUG=========================================
@@ -638,12 +653,14 @@ def lstm_layer(x):
         x = tf.reshape(x,[-1,fps,n_inputs])
         # x[video_batch_size,fps,n_inputs] ==> [video_batch_size * fps,n_inputs]
         x = tf.reshape(x,[-1,n_inputs])
+    print('LSTM_reshape,shape = {0}'.format(x.get_shape()))
     
     with tf.name_scope('LSTM_upscale'):
         # x_in ==> (video_batch_size * fps,n_hidden_units)
         x_in = tf.matmul(x,weights['in']) + biases['in']
         # x_in ==> (video_batch_size,fps,n_hidden_units)
         x_in = tf.reshape(x_in,[-1,fps,n_hidden_units])
+    print('LSTM_upscale,shape = {0}'.format(x_in.get_shape()))
     
     with tf.name_scope('LSTM_cell'):
         # cell
@@ -651,6 +668,7 @@ def lstm_layer(x):
         lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden_units,
                                                 forget_bias=1.0,
                                                 state_is_tuple=True)
+                                                
         _init_state = lstm_cell.zero_state(video_batch_size,dtype=tf.float32)
         outputs,states = tf.nn.dynamic_rnn(lstm_cell,
                                            x_in,
@@ -662,22 +680,98 @@ def lstm_layer(x):
         #[10,24,128][video_batch_size,fps,n_hidden_units]
         print('After LSTM layer dynamic run,output shape = {0}'.format(outputs.get_shape()))
         outputs = tf.unpack(tf.transpose(outputs,[1,0,2]))
+    print('LSTM_cell,shape = {0}'.format(outputs.get_shape()))
     
     with tf.name_scope('LSTM_downscale'):
         results = tf.matmul(outputs[-1],weights['out']) + biases['out']
-
+    print('LSTM_downscale,shape = {0}'.format(x.get_shape()))
+    
     with tf.name_scope('SoftMax'):
         results = tf.nn.softmax(results)
     return results
+    
+def stacked_lstm_layer(x,
+                       n_lstm):
+    print('============================LSTM==================================')
+    
+    # x :[pic_batch_size,1024]
+    # transpose to [video_batch_size,fps,1024]
+    # get input     
+    n_inputs = x.get_shape().as_list()[-1]
+    print('LSTM Layer n_inputs={0}'.format(n_inputs))    
+
+    # Define weights
+    weights = {
+        #(n_inpus=1024,n_hidden_units=128)
+        'in':tf.Variable(tf.random_normal([n_inputs,n_hidden_units])),
+        #(n_hidden_units=128,n_classes=11)
+        'out':tf.Variable(tf.random_normal([n_hidden_units,n_classes]))
+    }
+    biases = {
+        #(n_hidden_units=128,)
+        'in':tf.Variable(tf.constant(0.1,shape=[n_hidden_units,])),
+        #(n_classes=11,)
+        'out':tf.Variable(tf.constant(0.1,shape=[n_classes,]))
+    }
+    with tf.name_scope('LSMT_reshape'):
+        # x[pic_batch,n_inputs] ==> [video_batch_size,fps,n_inputs]
+        x = tf.reshape(x,[-1,fps,n_inputs])
+        # x[video_batch_size,fps,n_inputs] ==> [video_batch_size * fps,n_inputs]
+        x = tf.reshape(x,[-1,n_inputs])
+    print('LSTM_reshape,shape = {0}'.format(x.get_shape()))
+    
+    with tf.name_scope('LSTM_upscale'):
+        # x_in ==> (video_batch_size * fps,n_hidden_units)
+        x_in = tf.matmul(x,weights['in']) + biases['in']
+        # x_in ==> (video_batch_size,fps,n_hidden_units)
+        x_in = tf.reshape(x_in,[-1,fps,n_hidden_units])
+    print('LSTM_upscale,shape = {0}'.format(x_in.get_shape()))
+    
+    with tf.name_scope('LSTM_cell'):
+        # cell
+        # forget_bias = 1.0 represents all information can through lstm
+        lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden_units,
+                                                forget_bias=1.0,
+                                                state_is_tuple=False)
+        # stacked lstm
+        stacked_lstm = tf.nn.rnn_cell.MultiRNNCell([lstm_cell] * n_lstm,
+                                                   state_is_tuple=False)
+        _init_state = stacked_lstm.zero_state(video_batch_size,dtype=tf.float32)
+        
+        outputs,states = tf.nn.dynamic_rnn(stacked_lstm,
+                                           x_in,
+                                           initial_state=_init_state,
+                                           time_major=False
+                                           )
+        #==================================DUBUG===================================
+                                           
+        #[10,24,128][video_batch_size,fps,n_hidden_units]
+        print('After LSTM layer dynamic run,output shape = {0}'.format(outputs.get_shape()))
+        outputs = tf.unpack(tf.transpose(outputs,[1,0,2]))
+    print('LSTM_cell,outputs\' shape = {0}'.format(len(outputs)))
+    
+    with tf.name_scope('LSTM_downscale'):
+        results = tf.matmul(outputs[-1],weights['out']) + biases['out']
+    print('LSTM_downscale,shape = {0}'.format(results.get_shape()))
+    
+    return results    
         
 # test method
 def test_net(width,height):
     x = tf.placeholder(tf.float32,[None,width*height])
-    y_inception = inception_v1(x,width,height)
-    y_pred = lstm_layer(y_inception)
+    y = tf.placeholder(tf.float32,[None,n_classes]) 
+    y_inception = inception_v1(x,width,height,0.8)
+    y_pred = stacked_lstm_layer(y_inception,7)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
+    optimizer = tf.train.AdamOptimizer(0.0001).minimize(cost)
     
     
-def train_inception_v1_lstm(width,height):
+def train_inception_v1_stacked_lstm(width,
+                                    height,
+                                    n_lstm=7,
+                                    dropout_keep_prob=0.8,
+                                    learning_rate=0.00001,
+                                    n_epochs=200):
     
     print('...... loading the dataset ......')
     train_set_x,train_set_y,test_set_x,test_set_y = pd.load_data_set(width,height)
@@ -687,7 +781,7 @@ def train_inception_v1_lstm(width,height):
     keep_prob = tf.placeholder(tf.float32)             # dropout_keep_prob
     
     y_inception = inception_v1(x,width,height,keep_prob)
-    y_pred = lstm_layer(y_inception)
+    y_pred = stacked_lstm_layer(y_inception,n_lstm)
     
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
@@ -696,13 +790,13 @@ def train_inception_v1_lstm(width,height):
     accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 
     best_acc = 0.
+    best_acc_epoch = 0
     
     init = tf.initialize_all_variables()
     with tf.Session() as sess:
         print('...... initializating varibale ...... ')
         sess.run(init)
         
-        n_epochs = 100
         print('...... start to training ......')
         for epoch_i in range(n_epochs):
             # Training 
@@ -711,7 +805,7 @@ def train_inception_v1_lstm(width,height):
                 
                 batch_xs = train_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
                 batch_ys = train_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
-                _,loss,acc = sess.run([optimizer,cost,accuracy],
+                _,loss,acc = sess.run([optimizer, cost, accuracy],
                                            feed_dict={
                                                 x:batch_xs,
                                                 y:batch_ys,
@@ -738,23 +832,23 @@ def train_inception_v1_lstm(width,height):
             valid_accuracy /= (n_test_example//pic_batch_size)
             print('epoch:{0},train_accuracy:{1},valid_accuracy:{2}'.format(epoch_i,train_accuracy,valid_accuracy))
             if(train_accuracy > best_acc):
+                best_acc_epoch = epoch_i
                 best_acc = train_accuracy
     
     print('...... training finished ......')
-    print('...... best accuracy{0} ......'.format(best_acc))
+    print('...... best accuracy{0} @ epoch_{1}......'.format(best_acc,best_acc_epoch))
     
     
 if __name__ == '__main__':
     
-    if sys.argv[1]:
-        if sys.argv[2]:
-            w = int(sys.argv[1])
-            h = int(sys.argv[2])
-            if len(sys.argv) ==4:#third parameter is the way to test
-                test_net(width=w,height=h)
-            else:
-                print('...... training inception v1 and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
-                train_inception_v1_lstm(width=w,height=h)
-    else:      
+    if len(sys.argv) == 3:
+        w = int(sys.argv[1])
+        h = int(sys.argv[2])
         print('...... training inception v1 and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
-        train_inception_v1_lstm()
+        train_inception_v1_stacked_lstm(width=w,height=h)
+    
+    if len(sys.argv) == 4:
+        w = int(sys.argv[1])
+        h = int(sys.argv[2])
+        print('...... testing inception v1 and stacked lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+        test_net(width=w,height=h)
