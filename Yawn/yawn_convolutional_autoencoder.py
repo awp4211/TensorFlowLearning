@@ -83,20 +83,26 @@ def autoencoder(input_shape=[None,784],
                 current_input,W,
                 tf.pack([tf.shape(x)[0],shape[1],shape[2],shape[3]]),
                 strides=[1,2,2,1],padding='SAME'),b))
+        print('Decoder layer_{0},shape={1}'.format(layer_i,output.get_shape()))
         current_input = output
+        
         
     y = current_input
     cost = tf.reduce_sum(tf.square( y - x_tensor))
     
     return {'x':x,'y':y,'z':z,'cost':cost}
     
-def classify(z,hidden_size=[500,200,10]):
-    current_input = z
+def mlp(x,hidden_size=[500,200,10]):
+    """
+    Multilayer perceptron
+    x:Tensor:[batch_size,width*height*channels]
+    
+    """
+    current_input = x
     #flatten
-    current_input = tf.reshape(z,[-1,z.get_shape().as_list()[1],
-                                     z.get_shape().as_list()[2],
-                                     z.get_shape().as_list()[3]])
-    n_input = current_input.get_shape()[1]
+    current_input = tf.reshape(z,[-1,x.get_shape().as_list()[1],
+                                     x.get_shape().as_list()[2],
+                                     x.get_shape().as_list()[3]])
     for layer_i,n_output in enumerate(hidden_size):
         n_input = current_input.get_shape()[1]
         weight = tf.Variable(tf.random_normal([n_input,n_output],
@@ -105,10 +111,9 @@ def classify(z,hidden_size=[500,200,10]):
         bias = tf.Variable(tf.constant(0.1,shape=[n_output,]))
         output = tf.matmul(weight,current_input)
         output = tf.add(output,bias)
-        output = tf.nn.sigmoid(output)
         current_input = output
         
-    return tf.nn.softmax(current_input)
+    return current_input
     
 def test_mnist():
     """
@@ -132,15 +137,35 @@ def test_mnist():
     
     print('...... Start to training ......')    
     batch_size = 100
-    n_epochs = 5
+    n_epochs = 3
     for epoch_i in range(n_epochs):
         for batch_i in range(mnist.train.num_examples // batch_size):
             batch_xs,_ = mnist.train.next_batch(batch_size)
+            #均值图像
             train = np.asarray([img - mean_img for img in batch_xs])
             sess.run(optimizer,feed_dict={ae['x']:train})
         print(epoch_i, sess.run(ae['cost'], feed_dict={ae['x']: train}))
     
+    """
+    SAVE Model
+    """
+    _file = 'Yawn_dataset/cae.npy'    
+    cae_inner = []
+    batch_size = 100
+    for batch_i in range(mnist.train.num_examples // batch_size):
+        batch_xs,_ = mnist.train.next_batch(batch_size)
+        train = np.asarray([img - mean_img for img in batch_xs])
+        cae_z = sess.run(ae['z'],feed_dict={ae['x']:train})
+        print(cae_z.shape)
+        for vec in cae_z:
+            cae_inner.append(vec)
+    np.save(_file,cae_inner)
+    """
+    SAVE Model end
+    """
+   
     
+    """
     n_examples = 10
     test_xs, _ = mnist.test.next_batch(n_examples)
     test_xs_norm = np.array([img - mean_img for img in test_xs])
@@ -157,6 +182,12 @@ def test_mnist():
     fig.show()
     plt.draw()
     plt.waitforbuttonpress()
-    
+    """
+
+def classify_mnist():
+    _file = 'Yawn_dataset/cae.npy'
+    x = tf.placeholder(tf.float32,[None,n_input])
+
+        
 if __name__ == '__main__':
     test_mnist()
