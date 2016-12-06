@@ -99,17 +99,14 @@ def mlp(x,hidden_size=[500,200,10]):
     
     """
     current_input = x
-    #flatten
-    current_input = tf.reshape(z,[-1,x.get_shape().as_list()[1],
-                                     x.get_shape().as_list()[2],
-                                     x.get_shape().as_list()[3]])
     for layer_i,n_output in enumerate(hidden_size):
-        n_input = current_input.get_shape()[1]
+        n_input = int(current_input.get_shape()[1])
+        val = math.sqrt(float(n_input+n_output))
         weight = tf.Variable(tf.random_normal([n_input,n_output],
-                                              -1.0/math.sqrt(n_input+n_output),
-                                               1.0/math.sqrt(n_input+n_output)))
+                                              -1.0 / val,
+                                               1.0 / val))
         bias = tf.Variable(tf.constant(0.1,shape=[n_output,]))
-        output = tf.matmul(weight,current_input)
+        output = tf.matmul(current_input,weight)
         output = tf.add(output,bias)
         current_input = output
         
@@ -121,7 +118,6 @@ def test_mnist():
     """
     import tensorflow as tf
     import tensorflow.examples.tutorials.mnist.input_data as input_data
-    import matplotlib.pyplot as plt
     
     mnist = input_data.read_data_sets('MNIST_data',one_hot=True)
     mean_img = np.mean(mnist.train.images,axis=0)
@@ -160,6 +156,8 @@ def test_mnist():
         for vec in cae_z:
             cae_inner.append(vec)
     np.save(_file,cae_inner)
+    
+    sess.close()
     """
     SAVE Model end
     """
@@ -184,10 +182,55 @@ def test_mnist():
     plt.waitforbuttonpress()
     """
 
-def classify_mnist():
+def classify_mnist(training_epoch=10,batch_size=100):
+    """
+    MLP
+    """
+    import tensorflow as tf
+    import tensorflow.examples.tutorials.mnist.input_data as input_data
+    
+    print('...... Loading dataset ......')    
+    
     _file = 'Yawn_dataset/cae.npy'
+    test_set_x = np.load(_file)
+    test_set_x = test_set_x.reshape([-1,test_set_x.shape[1]*
+                                        test_set_x.shape[2]*
+                                        test_set_x.shape[3]])
+    mnist = input_data.read_data_sets("MNIST_data",one_hot=True)
+    n_classes = 10
+    n_input = test_set_x.shape[1]
     x = tf.placeholder(tf.float32,[None,n_input])
+    y = tf.placeholder(tf.float32,[None,n_classes])
+    
+    
+    print('...... Building model ......')
+    pred = mlp(x,hidden_size=[500,200,10])
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred,y))
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cost)
+    init  = tf.initialize_all_variables()
 
+    with tf.Session() as sess:
+        sess.run(init)
+        print('...... Training ......')
+        for epoch in range(training_epoch):
+            avg_cost = 0
+            total_batch = int(mnist.train.num_examples/batch_size)
+            for i in range(total_batch):
+                batch_xs = test_set_x[i*batch_size:(i+1)*batch_size]
+                _,batch_ys = mnist.train.next_batch(batch_size)
+                _,c = sess.run([optimizer,cost],feed_dict={x:batch_xs,
+                                                       y:batch_ys})
+                avg_cost += c/total_batch
+            print("epoch_{0},cost={1}".format(epoch,avg_cost))
+        
+        print('...... Optimize Done ......')
+        correct_prediction = tf.equal(tf.arg_max(pred,1),tf.arg_max(y,1))
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+        print("Accuracy:",accuracy.eval({x:test_set_x,y:mnist.train.labels}))
+            
+        
+    
         
 if __name__ == '__main__':
-    test_mnist()
+    #test_mnist()
+    classify_mnist()
