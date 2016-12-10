@@ -834,7 +834,7 @@ def train_inception_v1_stacked_lstm(width,
             if(train_accuracy > best_acc):
                 best_acc_epoch = epoch_i
                 best_acc = train_accuracy
-            print('epoch:{0},current best accuracy = {1} in epoch_{2}'.format(epoch_i,best_acc,best_acc_epoch))
+            print('---epoch:{0},current best accuracy = {1} in epoch_{2}'.format(epoch_i,best_acc,best_acc_epoch))
     
     print('...... training finished ......')
     print('...... best accuracy{0} @ epoch_{1}......'.format(best_acc,best_acc_epoch))
