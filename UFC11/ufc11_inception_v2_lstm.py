@@ -20,7 +20,7 @@ n_test_example = 4872
 learning_rate = 0.001
 dropout_keep_prob = 0.8
 
-pic_batch_size = 240 # % fps == 0
+pic_batch_size = 240 
 fps = 24
 video_batch_size = pic_batch_size / fps
 n_classes = 11
