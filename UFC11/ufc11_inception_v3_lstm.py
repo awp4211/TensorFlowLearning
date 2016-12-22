@@ -810,7 +810,7 @@ def train_inception_v3_stacked_lstm(width,
                                     n_lstm=7,
                                     dropout_keep_prob=0.8,
                                     learning_rate=0.00001,
-                                    n_epochs=200):
+                                    n_epochs=400):
     print('...... loading the dataset ......')
     train_set_x,train_set_y,test_set_x,test_set_y = pd.load_data_set(width,height)
     
