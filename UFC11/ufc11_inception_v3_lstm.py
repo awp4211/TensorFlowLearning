@@ -3,7 +3,7 @@
 """
 Author:XiyouZhaoC
 Rethinking the Inception Architecture for Computer Vision
-    InceptionV1 and LSTM networks
+    InceptionV3 and LSTM networks
     
 
 UFC11 dataset contains 1600 
