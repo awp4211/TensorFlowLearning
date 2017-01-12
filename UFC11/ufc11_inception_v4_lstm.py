@@ -175,12 +175,54 @@ def inception_v4(x,
     net = inception_A_block(net,name)
     print('InceptionA_4,shape={0}'.format(net.get_shape()))
     
+    # Reduction-A
     # 35 * 35 * 384 ==> 17 * 17 * 1024
     name = 'ReductionA'
     net = reduction_A_block(net,name)
     print('ReductionA,shape={0}'.format(net.get_shape()))
 
-        
+    # 7*InceptionB
+    # 17 * 17 * 1024 ==> 17 * 17 * 1024
+    name = 'InceptionB_1'
+    net = inception_B_block(net,name)
+    print('InceptionB_1,shape={0}'.format(net.get_shape()))
+    
+    # 17 * 17 * 1024 ==> 17 * 17 * 1024
+    name = 'InceptionB_2'
+    net = inception_B_block(net,name)
+    print('InceptionB_2,shape={0}'.format(net.get_shape()))
+    
+    # 17 * 17 * 1024 ==> 17 * 17 * 1024
+    name = 'InceptionB_3'
+    net = inception_B_block(net,name)
+    print('InceptionB_3,shape={0}'.format(net.get_shape()))
+    
+    # 17 * 17 * 1024 ==> 17 * 17 * 1024
+    name = 'InceptionB_4'
+    net = inception_B_block(net,name)
+    print('InceptionB_4,shape={0}'.format(net.get_shape()))
+    
+    # 17 * 17 * 1024 ==> 17 * 17 * 1024
+    name = 'InceptionB_5'
+    net = inception_B_block(net,name)
+    print('InceptionB_5,shape={0}'.format(net.get_shape()))
+    
+    # 17 * 17 * 1024 ==> 17 * 17 * 1024
+    name = 'InceptionB_6'
+    net = inception_B_block(net,name)
+    print('InceptionB_6,shape={0}'.format(net.get_shape()))
+    
+    # 17 * 17 * 1024 ==> 17 * 17 * 1024
+    name = 'InceptionB_7'
+    net = inception_B_block(net,name)
+    print('InceptionB_7,shape={0}'.format(net.get_shape()))
+    
+    # Reduction-B
+    name = 'ReductionB'
+    net = reduction_B_block(net,name)
+    print('ReductionB,shape={0}'.format(net.get_shape()))
+    
+    
     
 def inception_A_block(net,name):
     with tf.name_scope(name):
@@ -289,4 +331,80 @@ def inception_B_block(net,name):
             branch_2 = conv2d(branch_2,n_filters=224,
                                   k_h=7,k_w=1,
                                   stride_h=1,stride_w=1,
-                                  padding='SAME')
+                                  padding='SAME',
+                                  name=name+'/Branch_2/Conv2d_2b_1*7')
+            branch_2 = conv2d(branch_2,n_filters=256,
+                                  k_h=7,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_2/Conv2d_2c_1*7')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = conv2d(net,n_filters=192,
+                                  k_h=1,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3a_1*1')
+            branch_3 = conv2d(branch_3,n_filters=192,
+                                  k_h=7,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3b_1*7')
+            branch_3 = conv2d(branch_3,n_filters=224,
+                                  k_h=1,k_w=7,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3c_7*1')
+            branch_3 = conv2d(branch_3,n_filters=224,
+                                  k_h=7,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3c_1*7')
+            branch_3 = conv2d(branch_3,n_filters=256,
+                                  k_h=1,k_w=7,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3d_7*1')
+        net = tf.concat(3,[branch_0,branch_1,branch_2,branch_3])
+    return net
+    
+def reduction_B_block(net,name):
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = tf.nn.max_pool(net,ksize=[1,3,3,1],
+                                          strides=[1,2,2,1],
+                                          padding='VALID',
+                                          name=name+'/Branch_0/Max_pool_0a')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=192,
+                                  k_h=1,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_1/Conv2d_1a_1*1')
+            branch_1 = conv2d(branch_1,n_filters=192,
+                                  k_h=3,k_w=3,
+                                  stride_h=2,stride_w=2,
+                                  padding='VALID',
+                                  name=name+'/Branch_1/Conv2d_1b_3*3')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = conv2d(net,n_filters=256,
+                                  k_h=1,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_2/Conv2d_2a_1*1')
+            branch_2 = conv2d(branch_2,n_filters=256,
+                                  k_h=7,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_2/Conv2d_2b_1*7')
+            branch_2 = conv2d(branch_2,n_filters=256,
+                                  k_h=1,k_w=7,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_2/Conv2d_2c_7*1')
+            branch_2 = conv2d(branch_2,n_filters=320,
+                                  k_h=3,k_w=3,
+                                  stride_h=2,stride_w=2,
+                                  padding='VALID',
+                                  name=name+'/Branch_2/Conv2d_2d_3*3')
+        net = tf.concat(3,[branch_0,branch_1,branch_2])
+    return net
