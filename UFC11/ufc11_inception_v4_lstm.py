@@ -56,7 +56,7 @@ def inception_v4(x,
 
     with tf.name_scope('Image_Reshape'):
         x = tf.reshape(x,[-1,width,height,1])
-    print('IMage reshape,shape={0}'.format(x.get_shape()))
+    print('Image reshape,shape={0}'.format(x.get_shape()))
     
     # stem
     # 299 * 299 * 1 ==> 35 * 35 * 384
