@@ -218,9 +218,50 @@ def inception_v4(x,
     print('InceptionB_7,shape={0}'.format(net.get_shape()))
     
     # Reduction-B
+    # 17 * 17 * 1024 ==> 8 * 8 * 1536
     name = 'ReductionB'
     net = reduction_B_block(net,name)
     print('ReductionB,shape={0}'.format(net.get_shape()))
+    
+    # 3*Inception-C
+    # 8 * 8 * 1536 ==> 8 * 8 * 1536
+    name = 'InceptionC_1'
+    net = inception_C_block(net,name)
+    print('InceptionC_1,shape={0}'.format(net.get_shape()))
+    
+    # 8 * 8 * 1536 ==> 8 * 8 * 1536
+    name = 'InceptionC_2'
+    net = inception_C_block(net,name)
+    print('InceptionC_2,shape={0}'.format(net.get_shape()))
+    
+    # 8 * 8 * 1536 ==> 8 * 8 * 1536
+    name = 'InceptionC_3'
+    net = inception_C_block(net,name)
+    print('InceptionC_3,shape={0}'.format(net.get_shape()))
+    
+    # 8 * 8 * 1536 ==> 1 * 1 * 1536
+    with tf.name_scope('Average_pool'):
+        net = tf.nn.avg_pool(net,ksize=[1,net.get_shape().as_list()[1],
+                                          net.get_shape().as_list()[1],1],
+                             strides=[1,1,1,1],
+                             padding='VALID')
+    print('After avg pool,shape={0}'.format(net.get_shape()))
+    
+    with tf.name_scope('Flatten_layer'):
+        net = tf.reshape(net,
+                         [-1,net.get_shape().as_list()[1] * 
+                             net.get_shape().as_list()[2] *
+                             net.get_shape().as_list()[3]])
+    print('After flatten layer,shape={0}'.format(net.get_shape()))
+    
+    with tf.name_scope('Dropout'):
+        net = tf.nn.dropout(net,keep_prob=dropout_keep_prob)
+    
+    # Final pooling
+    print('After pure InceptionV4,shape={0}'.format(net.get_shape()))
+    return net
+    
+    
     
     
     
@@ -408,3 +449,83 @@ def reduction_B_block(net,name):
                                   name=name+'/Branch_2/Conv2d_2d_3*3')
         net = tf.concat(3,[branch_0,branch_1,branch_2])
     return net
+    
+def inception_C_block(net,name):
+    with tf.name_scope(name):
+        with tf.name_scope(name+'/Branch_0'):
+            branch_0 = tf.nn.avg_pool(net,ksize=[1,2,2,1],
+                                          strides=[1,1,1,1],
+                                          padding='SAME',
+                                          name=name+'/Branch_0/Avg_pool_0a')
+            branch_0 = conv2d(branch_0,n_filters=256,
+                                  k_h=1,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_0/Conv2d_0b_1*1')
+        with tf.name_scope(name+'/Branch_1'):
+            branch_1 = conv2d(net,n_filters=256,
+                                  k_h=1,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_1/Conv2d_1a_1*1')
+        with tf.name_scope(name+'/Branch_2'):
+            branch_2 = conv2d(net,n_filters=384,
+                                  k_h=1,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_2/Conv2d_2a_1*1')
+            branch_21 = conv2d(branch_2,n_filters=256,
+                                  k_h=3,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_2/Conv2d_2b_1*3')
+            branch_22 = conv2d(branch_2,n_filters=256,
+                                  k_h=1,k_w=3,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_2/Conv2d_2c_3*1')
+        with tf.name_scope(name+'/Branch_3'):
+            branch_3 = conv2d(net,n_filters=384,
+                                  k_h=1,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3a_1*1')
+            branch_3 = conv2d(branch_3,n_filters=448,
+                                  k_h=3,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3b_1*3')
+            branch_3 = conv2d(branch_3,n_filters=512,
+                                  k_h=1,k_w=3,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3c_3*1')
+            branch_31 = conv2d(branch_3,n_filters=256,
+                                  k_h=1,k_w=3,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3d_3*1')
+            branch_32 = conv2d(branch_3,n_filters=256,
+                                  k_h=3,k_w=1,
+                                  stride_h=1,stride_w=1,
+                                  padding='SAME',
+                                  name=name+'/Branch_3/Conv2d_3e_1*3')
+        net = tf.concat(3,[branch_0,branch_1,branch_21,branch_22,branch31,branch_32])
+    return net
+    
+def test_net(width,height):
+    x = tf.placeholder(tf.float32,[None,width*height])
+    y = tf.placeholder(tf.float32,[None,n_classes])
+    y_inception = inception_v4(x,width,height,dropout_keep_prob)
+    
+    
+if __name__ == '__main__':
+    if len(sys.argv) == 3:
+        w = int(sys.argv[1])
+        h = int(sys.argv[2])
+        pass
+    if len(sys.argv) == 4:
+        w = int(sys.argv[1])
+        h = int(sys.argv[2])
+        print('...... testing inception v4 and stacked lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+        test_net(width=w,height=h)
