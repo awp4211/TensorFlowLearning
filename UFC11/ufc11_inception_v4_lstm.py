@@ -608,13 +608,87 @@ def test_net(width,height):
     x = tf.placeholder(tf.float32,[None,width*height])
     y = tf.placeholder(tf.float32,[None,n_classes])
     y_inception = inception_v4(x,width,height,dropout_keep_prob)
+    y_pred = stacked_lstm_layer(y_inception,7)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
     
+def train_inception_v4_stacked_lstm(width,
+                                    height,
+                                    n_lstm=7,
+                                    dropout_keep_prob=0.8,
+                                    learning_rate=0.00001,
+                                    n_epochs=200):
+    print('...... loading the dataset ......')
+    train_set_x,train_set_y,test_set_x,test_set_y = pd.load_data_set(width,height)
     
+    x = tf.placeholder(tf.float32,[None,width*height]) # input
+    y = tf.placeholder(tf.float32,[None,n_classes])    # label
+    keep_prob = tf.placeholder(tf.float32)             # dropout_keep_prob
+    
+    y_inception = inception_v4(x,width,height,keep_prob)
+    y_pred = stacked_lstm_layer(y_inception,n_lstm)
+    
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_pred,y))
+    optimizer = tf.train.RMSPropOptimizer(learning_rate).minimize(cost)
+    
+    correct_prediction = tf.equal(tf.argmax(y_pred,1),tf.argmax(y,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+
+    best_acc = 0.
+    best_acc_epoch = 0
+    
+    init = tf.initialize_all_variables()
+    with tf.Session() as sess:
+        print('...... initializating varibale ...... ')
+        sess.run(init)
+        
+        print('...... start to training ......')
+        for epoch_i in range(n_epochs):
+            # Training 
+            train_accuracy = 0.
+            for batch_i in range(n_train_example//pic_batch_size):
+                
+                batch_xs = train_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
+                batch_ys = train_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
+                _,loss,acc = sess.run([optimizer, cost, accuracy],
+                                           feed_dict={
+                                                x:batch_xs,
+                                                y:batch_ys,
+                                                keep_prob:dropout_keep_prob}
+                                                )
+                print('epoch:{0},minibatch:{1},cost:{2},train_accuracy:{3}'.format(epoch_i,batch_i,loss,acc))
+                train_accuracy += acc
+
+            train_accuracy /= (n_train_example//pic_batch_size)
+            print('----epoch:{0},training acc = {1}'.format(epoch_i,train_accuracy))
+            
+            # Validation
+            valid_accuracy = 0.
+            for batch_i in range(n_test_example//pic_batch_size):
+                batch_xs = test_set_x[batch_i*pic_batch_size:(batch_i+1)*pic_batch_size]
+                batch_ys = test_set_y[batch_i*video_batch_size:(batch_i+1)*video_batch_size]
+                valid_accuracy += sess.run(accuracy,
+                                           feed_dict={
+                                                x:batch_xs,
+                                                y:batch_ys,
+                                                keep_prob:1.0})
+            valid_accuracy /= (n_test_example//pic_batch_size)
+            print('epoch:{0},train_accuracy:{1},valid_accuracy:{2}'.format(epoch_i,train_accuracy,valid_accuracy))
+            if(train_accuracy > best_acc):
+                best_acc_epoch = epoch_i
+                best_acc = train_accuracy
+            print('========epoch:{0},current best accuracy = {1} in epoch_{2}'.format(epoch_i,best_acc,best_acc_epoch))
+    
+    print('...... training finished ......')
+    print('...... best accuracy{0} @ epoch_{1}......'.format(best_acc,best_acc_epoch))                                             
+
 if __name__ == '__main__':
     if len(sys.argv) == 3:
         w = int(sys.argv[1])
         h = int(sys.argv[2])
-        pass
+        print('...... training inception v4 and lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
+        train_inception_v4_stacked_lstm(width=w,height=h)
+
     if len(sys.argv) == 4:
         w = int(sys.argv[1])
         h = int(sys.argv[2])
