@@ -52,7 +52,7 @@ def inception_resnet_v1(x,
                         dropout_keep_prob):
     print('=====================Inception ResNet V1==========================')
 
-     # 299 * 299 * 1
+    # 299 * 299 * 1
     with tf.name_scope('Image_Reshape'):
         x = tf.reshape(x,[-1,width,height,1])
     print('Image reshape,shape={0}'.format(x.get_shape()))
