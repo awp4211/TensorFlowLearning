@@ -645,3 +645,4 @@ if __name__ == '__main__':
         h = int(sys.argv[2])
         print('...... testing inception_resnet_v1 and stacked lstm network:width = {0},height = {1}'.format(sys.argv[1],sys.argv[2]))
         test_net(width=w,height=h)
+    
