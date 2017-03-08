@@ -1,5 +1,6 @@
 """
 Deep Neural Decision Forest
+write with tensorflow 1.0
 """
 
 import tensorflow as tf
@@ -85,9 +86,12 @@ def model(X,w,w2,w3,w4_e,w_d_e,w_l_e,p_keep_conv,p_keep_hidden):
         net = tf.nn.relu(tf.matmul(conv3,w4))
         net = tf.nn.dropout(net,p_keep_hidden)
 
+        print('...... decision_p before sigmoid,shape = {0}'.format(net.get_shape()))
         decision_p = tf.nn.sigmoid(tf.matmul(net,w_d))
         print('...... decision_p(decision node rounting probability) shape = {0}'.format(decision_p.get_shape()))
+
         leaf_p = tf.nn.softmax(w_l)
+        print('...... leaf_p(leaf probability distribute shape = {0}'.format(leaf_p.get_shape()))
 
         decision_p_e.append(decision_p)
         leaf_p_e.append(leaf_p)
@@ -136,29 +140,44 @@ def train():
 
     # iterate over each tree
     for decision_p in decision_p_e:
-        # compute the complement of d,which is 1-d
-        # where d is the sigmoid of fully connected output
-        decision_p_comp = tf.sub(tf.ones_like(decision_p),decision_p)
-        tf
+        # compute the complement of d,which is 1-d where d is the sigmoid of fully connected output
+        # tf.ones_like():all elements set to 1
+        decision_p_comp = tf.subtract(tf.ones_like(decision_p),decision_p)
+        print('...... decision_p_comp,shape = {0}'.format(decision_p_comp.get_shape()))
+
         # concatenate both d,1-d
-        decision_p_pack = tf.pack([decision_p,decision_p_comp])
+        # tf.pack ==> tf.stack
+        decision_p_pack = tf.stack([decision_p,decision_p_comp])
+        print('...... decision_p_pack,shape = {0}'.format(decision_p_pack.get_shape()))#(2,128,16)
 
         # flatten/vectorize the decision probabilities for efficient indexing
+        # vectorize (decision_p,decision_p_comp) to a 1 dimension vector
         flat_decision_p = tf.reshape(decision_p_pack,[-1])
         flat_decision_p_e.append(flat_decision_p)
 
+    print('...... flat decision_p_e element,shape = {0}'.format(flat_decision_p_e[0].get_shape()))
     # index of each data instance in a mini-batch
+    # tf.tile(input,multiples):output tensor i'th dimension has input.dim(i)*multiples[i] elements.
+    #   and the values of input are replicated multiples[i] times along the i'th dimension
+    # tf.range(start,limit,delta):generate a sequence begins at start and extends by increments of delta.
+    # tf.expand_dims():given a tensor input, this operation inserts a dimension of 1 at the dimension index axis of input's shape
     batch_0_indices = tf.tile(tf.expand_dims(tf.range(0,N_BATCH * N_LEAF,N_LEAF),1),[1,N_LEAF])
+    # tf.range() ===> a list
+    # tf.expand_dims(tf.range()) ===> [?,1] array
+    # tf.tile(tf.expand_dims(tf.range())) ===> [?,N_LEAF] array,each element is the first index
+    print('...... batch_0_indices,shape = {0}'.format(batch_0_indices.get_shape()))
 
     ####################################
     # the routing probability computation
-    # firstly create a routing probability matrix.
+    # firstly create a routing probability matrix. \mu
     # initialize matrix using the root node d,1-d.To efficiently implement this routing,
     # we will create a giant vector(matrix) that contains all d and 1-d from all
     # decision nodes.The matrix version of that is decision_p_pack and vectorized
     # version is flat_decision_p.
 
-    # the suffix  `_e` indicates an ensemble. i.e. concatenation of all responsens from trees
+    # The suffix  `_e` indicates an ensemble. i.e. concatenation of all responsens from trees
+    # For DEPTH =2 tree,the routing probability for each leaf node can be easily compute
+    # by multiplying the following vectors elementwise.(DEPTH=2,N_LEAF=8)
     # mu =      [d_0,  d_0,   d_0,   d_0, 1-d_0, 1-d_0, 1-d_0, 1-d_0]
     # mu = mu * [d_1,  d_1, 1-d_1, 1-d_1,   d_2,   d_2, 1-d_2, 1-d_2]
     # mu = mu * [d_3,1-d_3,   d_4, 1-d_4,   d_5, 1-d_5,   d_6, 1-d_6]
@@ -202,7 +221,7 @@ def train():
                              * out_repeat).reshape(N_BATCH,N_LEAF)
         mu_e_update = []
         for mu,flat_decision_p in zip(mu_e,flat_decision_p_e):
-            mu = tf.mul(mu,tf.gather(flat_decision_p,
+            mu = tf.multiply(mu,tf.gather(flat_decision_p,
                                              tf.add(batch_indices,batch_complement_indices)))
             mu_e_update.append(mu)
 
@@ -213,19 +232,19 @@ def train():
     py_x_e = []
     for mu,leaf_p in zip(mu_e,leaf_p_e):
         py_x_tree = tf.reduce_mean(
-                    tf.mul(tf.tile(tf.expand_dims(mu,2),[1,1,N_LABEL])),
-                           tf.tile(tf._expand_dims(leaf_p,0),[N_BATCH,1,1]),1
-                )
+            tf.multiply(
+                    tf.tile(tf.expand_dims(mu, 2), [1, 1, N_LABEL]),
+                    tf.tile(tf.expand_dims(leaf_p, 0), [N_BATCH, 1, 1])), 1)
         py_x_e.append(py_x_tree)
 
-    py_x_e = tf.pack(py_x_e)
+    py_x_e = tf.stack(py_x_e)
     py_x = tf.reduce_mean(py_x_e,0)
 
     #######################################
     # define cost and optimization method
 
     # cross entropy
-    cost = tf.reduce_mean(-tf.mul(tf.log(py_x),Y))
+    cost = tf.reduce_mean(-tf.multiply(tf.log(py_x),Y))
 
     # cost = tf.reduce_mean(tf.nn.cross_entropy_with_logits(py_x,Y))
     train_step = tf.train.RMSPropOptimizer(0.001,0.9).minimize(cost)
@@ -237,7 +256,8 @@ def train():
     for i in range(100):
         # one epoch
         for start,end in zip(range(0,len(trX),N_BATCH),range(N_BATCH,len(trX),N_BATCH)):
-            sess.run(train_step,feed_dict={X:trX[start:end],Y:trY[start:end],
+            sess.run(train_step,feed_dict={X:trX[start:end],
+                                           Y:trY[start:end],
                                            p_keep_conv:0.8,
                                            p_keep_hidden:0.5})
         results = []
@@ -246,7 +266,7 @@ def train():
                            == sess.run(predict,feed_dict={X:teX[start:end],
                                                           p_keep_conv:1.0,
                                                           p_keep_hidden:1.0}))
-        print 'Epoch:%d,Test Accuracy:%f'%(i+1,np.mean(results))
+        print 'Epoch:%d,Test Accuracy:%f'%(i+1,sum(results)/len(results))
 
 
 if __name__ == '__main__':
