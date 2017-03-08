@@ -86,7 +86,7 @@ def model(X,w,w2,w3,w4_e,w_d_e,w_l_e,p_keep_conv,p_keep_hidden):
         net = tf.nn.dropout(net,p_keep_hidden)
 
         decision_p = tf.nn.sigmoid(tf.matmul(net,w_d))
-        print('...... decision_p(decision node rounting probability) shape')
+        print('...... decision_p(decision node rounting probability) shape = {0}'.format(decision_p.get_shape()))
         leaf_p = tf.nn.softmax(w_l)
 
         decision_p_e.append(decision_p)
