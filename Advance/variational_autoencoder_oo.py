@@ -7,24 +7,25 @@ OO styled Variational Autoencoder
 import numpy as np
 import tensorflow as tf
 import os
-from scipy.misc import imsave
 
+from scipy.misc import imsave
 from tensorflow.contrib import layers
 from tensorflow.contrib import losses
 from tensorflow.contrib.framework import arg_scope
+from progressbar import ETA, Bar, Percentage, ProgressBar
 
 
 def encoder(input_tensor, output_size):
-    """
-    Create encoder network
-    :param input_tensor:a batch of flattened images [batch_size,28*28]
-    :param output_size:return size
-    :return: encodered neural networks
+    """Create encoder network.
+    Args:
+        input_tensor: a batch of flattened images [batch_size, 28*28]
+    Returns:
+        A tensor that expresses the encoder network
     """
     net = tf.reshape(input_tensor, [-1, 28, 28, 1])
-    net = layers.conv2d(net, num_outputs=32, kernel_size=5, stride=2, padding='SAME')
-    net = layers.conv2d(net, num_outputs=64, kernel_size=5, stride=2, padding='SAME')
-    net = layers.conv2d(net, num_outputs=128, kernel_size=5, stride=2, padding='VALID')
+    net = layers.conv2d(net, 32, 5, stride=2)
+    net = layers.conv2d(net, 64, 5, stride=2)
+    net = layers.conv2d(net, 128, 5, stride=2, padding='VALID')
     net = layers.dropout(net, keep_prob=0.9)
     net = layers.flatten(net)
     return layers.fully_connected(net, output_size, activation_fn=None)
@@ -32,18 +33,23 @@ def encoder(input_tensor, output_size):
 
 def decoder(input_tensor):
     """
-    Create decoder network.If input is provided then decodes it, otherwise samples from a vector.
-    :param input_tensor: a batch of vectors to decode
-    :return: A tensor that expresses the decoder network
+        Create decoder network.
+        If input tensor is provided then decodes it, otherwise samples from
+        a sampled vector.
+    Args:
+        input_tensor: a batch of vectors to decode
+    Returns:
+        A tensor that expresses the decoder network
     """
+
     net = tf.expand_dims(input_tensor, 1)
     net = tf.expand_dims(net, 1)
-    net = layers.conv2d_transpose(net, num_outputs=128, kernel_size=3, stride=1, padding='VALID')
-    net = layers.conv2d_transpose(net, num_outputs=64, kernel_size=5, padding='VALID')
-    net = layers.conv2d_transpose(net, num_outputs=32, kernel_size=5, stride=2, padding='SAME')
-    net = layers.conv2d(
-        net, num_outputs=1, kernel_size=5, stride=2, activation_fn=tf.nn.sigmoid
-    )
+    net = layers.conv2d_transpose(net, 128, 3, padding='VALID')
+    net = layers.conv2d_transpose(net, 64, 5, padding='VALID')
+    net = layers.conv2d_transpose(net, 32, 5, stride=2)
+    net = layers.conv2d_transpose(
+        net, 1, 5, stride=2, activation_fn=tf.nn.sigmoid)
+    net = layers.flatten(net)
     return net
 
 
@@ -99,8 +105,8 @@ class VAE(Generator):
         rec_loss = self.__get_reconstruction_cost(output_tensor, self.input_tensor)
 
         loss = vae_loss + rec_loss
-        self.train = layers.optimize_loss(loss,tf.contrib.framework.tf.contrib.
-                                          framework.get_or_create_global_step(),
+        self.train = layers.optimize_loss(loss,
+                                          tf.contrib.framework.get_or_create_global_step(),
                                           learning_rate=learning_rate,
                                           optimizer='Adam',
                                           update_ops=[])
@@ -136,3 +142,27 @@ class VAE(Generator):
         :return:
         """
         return self.sess.run(self.train,{self.input_tensor: input_tensor})
+
+if __name__ == '__main__':
+    from tensorflow.examples.tutorials.mnist import input_data
+
+    # parameter
+    hidden_size = 128
+    batch_size = 128
+    max_epoch = 100
+    learning_rate = 1e-2
+    updates_per_epoch = 1000
+    mnist = input_data.read_data_sets('MNIST/', one_hot=True)
+
+    model = VAE(hidden_size, batch_size, learning_rate)
+    for epoch in range(max_epoch):
+        training_loss = 0.0
+        pbar = ProgressBar()
+        for i in pbar(range(updates_per_epoch)):
+            images,_ = mnist.train.next_batch(batch_size)
+            loss_value = model.update_params(images)
+            training_loss += loss_value
+
+        training_loss = training_loss / (updates_per_epoch * batch_size)
+        print("Loss %f" % training_loss)
+        model.generate_and_save_images(batch_size,"IMG/")
