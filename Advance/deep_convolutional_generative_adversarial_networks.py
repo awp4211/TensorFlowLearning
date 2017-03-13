@@ -66,6 +66,25 @@ def decoder(input_tensor):
     print('decoder network -- input_tensor,shape = {0}'.format(input_tensor.get_shaoe()))
     net = tf.expand_dims(input_tensor, 1)
     net = tf.expand_dims(net, 1)
+    print('decoder network -- expand_dims,shape = {0}'.format(net.get_shape()))
 
+    net = layers.conv2d_transpose(net, 128, 3, padding='VALID')
+    print('decoder network -- dconv1,shape = {0}'.format(net.get_shape()))
+
+    net = layers.conv2d_transpose(net, 64, 5, padding='VALID')
+    print('decoder network -- dconv2,shape = {0}'.format(net.get_shape()))
+
+    net = layers.conv2d_transpose(net, 32, 5, stride=2)
+    print('decoder network -- dconv3,shape = {0}'.format(net.get_shape()))
+
+    net = layers.conv2d_transpose(
+        net, 1, 5, stride=2, activation_fn=tf.nn.sigmoid
+    )
+    print('decoder network -- dconv4,shape = {0}'.format(net.get_shape()))
+
+    net = layers.flatten(net)
+    print('decoder network -- flatten,shape = {0}'.format(net.get_shape()))
+
+    return net
 
 
