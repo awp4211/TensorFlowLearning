@@ -4,7 +4,9 @@
 """
 implement of DCGAN(Deep Convolutional Generative Adversarial Networks)
 Unsupervised representation learning with deep
-convolutional generative adversarial networkss
+convolutional generative adversarial networks
+
+TODO DEBUG
 
 """
 import math
@@ -35,7 +37,7 @@ def encoder(input_tensor, output_size):
     net = layers.conv2d(net, 64, 5, stride=2)
     print('encoder network -- conv2,shape = {0}'.format(net.get_shape()))
 
-    net = layers.conv2d(net, 128, 5, stride=2,padding='VALID')
+    net = layers.conv2d(net, 128, 5, stride=2, padding='VALID')
     print('encoder network -- conv3,shape = {0}'.format(net.get_shape()))
 
     net = layers.dropout(net, keep_prob=0.9)
@@ -65,7 +67,7 @@ def decoder(input_tensor):
     :param input_tensor: a batch of vector to decode
     :return: a tensor that expresses the decoder network
     """
-    print('decoder network -- input_tensor,shape = {0}'.format(input_tensor.get_shaoe()))
+    print('decoder network -- input_tensor,shape = {0}'.format(input_tensor.get_shape()))
     net = tf.expand_dims(input_tensor, 1)
     net = tf.expand_dims(net, 1)
     print('decoder network -- expand_dims,shape = {0}'.format(net.get_shape()))
@@ -91,15 +93,17 @@ def decoder(input_tensor):
 
 
 def concat_elu(inputs):
+    print(inputs.get_shape())
+
     return tf.nn.elu(tf.concat(3, [-inputs, inputs]))
 
 
 class Generator(object):
 
-    def update_params(self, inputs):
+    def update_params(self, input_tensor):
         """
         update parameters of the network
-        :param inputs:a batch of flattened images
+        :param input_tensor:a batch of flattened images
         :return:current loss value
         """
         return NotImplementedError()
@@ -127,32 +131,32 @@ class GAN(Generator):
         self.input_tensor = tf.placeholder(tf.float32, [None, 28*28])
 
         with arg_scope([layers.conv2d, layers.conv2d_transpose],
-                       activation_fn=concat_elu,
+                       activation_fn=tf.nn.elu,
                        normalizer_fn=layers.batch_norm,
-                       normalizer_params={'scale':True}):
+                       normalizer_params={'scale': True}):
             with tf.variable_scope('model'):
-                D1 = discriminator(self.input_tensor) # postive examples
+                D1 = discriminator(self.input_tensor)# postive examples
                 D_params_sum = len(tf.trainable_variables())
                 G = decoder(tf.random_normal([batch_size, hidden_size]))
                 self.sampled_tensor = G
 
-            with tf.variable_scope('model',reuse=True):
-                D2 = discriminator(G) # generated examples
+            with tf.variable_scope('model', reuse=True):
+                D2 = discriminator(G)# generated examples
 
-            D_loss = self.__get_discriminator_loss(D1, D2)
-            G_loss = self.__get_generator_loss(D2)
+        D_loss = self.__get_discriminator_loss(D1, D2)
+        G_loss = self.__get_generator_loss(D2)
 
-            params = tf.trainable_variables()
-            D_params = params[:D_params_sum]
-            G_params = params[D_params_sum:]
-            global_step = tf.contrib.framework.get_or_create_global_step()
-            self.train_discrimator = layers.optimize_loss(
+        params = tf.trainable_variables()
+        D_params = params[:D_params_sum]
+        G_params = params[D_params_sum:]
+        global_step = tf.contrib.framework.get_or_create_global_step()
+        self.train_discrimator = layers.optimize_loss(
                 D_loss, global_step, learning_rate / 10, 'Adam', variables=D_params, update_ops=[])
-            self.train_generator = layers.optimize_loss(
+        self.train_generator = layers.optimize_loss(
                 G_loss, global_step, learning_rate, 'Adam', variables=G_params, update_ops=[])
 
-            self.sess = tf.Session()
-            self.sess.run(tf.global_variables_initializer())
+        self.sess = tf.Session()
+        self.sess.run(tf.global_variables_initializer())
 
     def __get_discriminator_loss(self, D1, D2):
         """
@@ -174,10 +178,9 @@ class GAN(Generator):
         return losses.sigmoid_cross_entropy(D2, tf.ones(tf.shape(D2)))
 
     def update_params(self, inputs):
-        d_loss_value = self.sess.run(self.train_discrimator,
-                                     {self.input_tensor,inputs})
+        d_loss_value = self.sess.run(self.train_discrimator, {self.input_tensor, inputs})
 
-        g_loss_value = self.sess.fun(self.train_generator)
+        g_loss_value = self.sess.run(self.train_generator)
 
         return g_loss_value
 
