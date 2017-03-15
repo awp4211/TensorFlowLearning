@@ -7,7 +7,7 @@ Unsupervised representation learning with deep
 convolutional generative adversarial networks
 
 TODO DEBUG
-
+https://github.com/ikostrikov/TensorFlow-VAE-GAN-DRAW/blob/master/
 """
 import math
 import tensorflow as tf
