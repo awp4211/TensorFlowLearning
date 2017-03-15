@@ -43,25 +43,22 @@ def generator(z):
     return g_prob, theta_g
 
 
+d_w1 = tf.Variable(xavier_init([784, 128]))
+d_b1 = tf.Variable(tf.zeros(shape=[128]))
+d_w2 = tf.Variable(xavier_init([128, 1]))
+d_b2 = tf.Variable(tf.zeros(shape=[1]))
+theta_d = [d_w1, d_w2, d_b1, d_b2]
+
 def discriminator(x):
     """
     Discriminator Net
     :param x:input data
     :return:is data from x(d_prob) and log likelihood
     """
-    d_w1 = tf.Variable(xavier_init([784, 128]))
-    d_b1 = tf.Variable(tf.zeros(shape=[128]))
     d_h1 = tf.nn.relu(tf.matmul(x, d_w1) + d_b1)
-
-    d_w2 = tf.Variable(xavier_init([128, 1]))
-    d_b2 = tf.Variable(tf.zeros(shape=[1]))
     d_logit = tf.matmul(d_h1, d_w2) + d_b2
-
     d_prob = tf.nn.sigmoid(d_logit)
-
-    theta_d = [d_w1, d_w2, d_b1, d_b2]
-
-    return d_prob, d_logit, theta_d
+    return d_prob, d_logit
 
 
 def sample_z(m,n):
@@ -84,7 +81,11 @@ def plot(samples):
     return fig
 
 
-def train():
+def train(batch_size=128,
+          learning_rate=0.001):
+
+    learning_rate = 0.001
+
     print('...... define model ......')
     # define placeholder
     x = tf.placeholder(tf.float32, shape=[None, 784])
@@ -92,8 +93,8 @@ def train():
     z = tf.placeholder(tf.float32, shape=[None, 100])#z_dim = 100
 
     g_sample, theta_g = generator(z)
-    d_real, d_logit_real, theta_d = discriminator(x)
-    d_fake, d_logit_fake, theta_d = discriminator(g_sample)
+    d_real, d_logit_real = discriminator(x)
+    d_fake, d_logit_fake = discriminator(g_sample)
 
     # D_loss = -tf.reduce_mean(tf.log(D_real) + tf.log(1. - D_fake))
     # G_loss = -tf.reduce_mean(tf.log(D_fake))
@@ -105,8 +106,8 @@ def train():
 
     g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logit_fake, labels=tf.ones_like(d_logit_fake)))
 
-    d_solver = tf.train.AdamOptimizer().minimize(d_loss, var_list=theta_d)
-    g_solver = tf.train.AdamOptimizer().minimize(g_loss, var_list=theta_g)
+    d_solver = tf.train.AdamOptimizer(learning_rate).minimize(d_loss, var_list=theta_d)
+    g_solver = tf.train.AdamOptimizer(learning_rate).minimize(g_loss, var_list=theta_g)
 
     print('...... loading dataset......')
     mnist = input_data.read_data_sets('MNIST/', one_hot=True)
@@ -119,7 +120,6 @@ def train():
     sess.run(tf.global_variables_initializer())
 
     index = 0
-    batch_size = 128
     for epoch in range(1000000):
         if epoch % 1000 == 0:
             samples = sess.run(g_sample,
