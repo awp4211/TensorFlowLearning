@@ -100,6 +100,7 @@ def train(batch_size=128,#mini-batch
     # D_loss = -tf.reduce_mean(tf.log(D_real) + tf.log(1. - D_fake))
     # G_loss = -tf.reduce_mean(tf.log(D_fake))
 
+
     # define loss
     d_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logit_real, labels=tf.ones_like(d_logit_real)))
     d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logit_fake, labels=tf.zeros_like(d_logit_fake)))
