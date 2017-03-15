@@ -81,8 +81,9 @@ def plot(samples):
     return fig
 
 
-def train(batch_size=128,
-          learning_rate=0.001):
+def train(batch_size=128,#mini-batch
+          learning_rate=0.001#lr
+          ):
 
     learning_rate = 0.001
 
