@@ -66,8 +66,8 @@ def sample_z(m,n):
 
 
 def plot(samples):
-    fig = plt.figure(figsize=(4,4))
-    gs = gridspec.GridSpec(4,4)
+    fig = plt.figure(figsize=(4, 4))
+    gs = gridspec.GridSpec(4, 4)
     gs.update(wspace=0.05, hspace=0.05)
 
     for i, sample in enumerate(samples):
