@@ -89,8 +89,6 @@ def train(batch_size=128,#mini-batch
           learning_rate=0.001#lr
           ):
 
-    learning_rate = 0.001
-
     print('...... define model ......')
     # define placeholder
     x = tf.placeholder(tf.float32, shape=[None, 784])
