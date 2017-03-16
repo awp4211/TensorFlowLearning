@@ -24,7 +24,10 @@ def xavier_init(size):
 
 def generator(z):
     """
-    Generator Net
+    Generator Net:
+        The generator(z) takes 100-dimensional vector and returns 784-dimensional
+        vector, which is MNIST image(28*28).z here is the prior for the G(z).In a
+        way it learns a mapping between the prior space to Pdata.
     :param z:input noise sampled from N(0,1)
     :return:generated data from noise
     """
@@ -48,6 +51,7 @@ d_b1 = tf.Variable(tf.zeros(shape=[128]))
 d_w2 = tf.Variable(xavier_init([128, 1]))
 d_b2 = tf.Variable(tf.zeros(shape=[1]))
 theta_d = [d_w1, d_w2, d_b1, d_b2]
+
 
 def discriminator(x):
     """
