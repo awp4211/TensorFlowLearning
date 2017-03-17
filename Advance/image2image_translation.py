@@ -220,4 +220,25 @@ def create_generator(generator_inputs,
             rectified = tf.nn.relu(input)
             # [batch, in_height, in_width, in_channels]
             # ==>[batch, in_height*2, in_width*2, out_channels]
+            output = deconv(rectified, out_channels)
+            output = batchnorm(output)
+
+            if dropout > 0.0:
+                output = tf.nn.dropout(output, keep_prob=1 - dropout)
+
+            layers.append(output)
+
+    with tf.variable_scope("decoder_1"):
+        input = tf.concat([layers[-1], layers[0]], axis=3)
+        rectified = tf.nn.relu(input)
+        output = deconv(rectified, generator_outputs_channels)
+        output = tf.tanh(output)
+        layers.append(output)
+
+    return layers[-1]
+
+
+def create_model(inputs, targets):
+    def create_discriminator(discrim_inputs, discrim_targets):
+        pass
 
