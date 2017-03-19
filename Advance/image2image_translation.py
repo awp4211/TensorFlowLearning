@@ -15,6 +15,8 @@ import collections
 import time
 import math
 
+EPS = 1e-12
+CROP_SIZE = 256
 
 def download_dataset():
     """
@@ -238,7 +240,145 @@ def create_generator(generator_inputs,
     return layers[-1]
 
 
-def create_model(inputs, targets):
-    def create_discriminator(discrim_inputs, discrim_targets):
-        pass
+def create_model(inputs,
+                 targets,
+                 l1_weight=100.0,
+                 gan_weight=1.0,
+                 lr=0.0002,
+                 beta1=0.5):
+    """
+
+    :param inputs:
+    :param targets:
+    :param l1_weight: weight on L1 term for generator gradient
+    :param gan_weight:weight on GAN term for generator gradient
+    :param lr:initial learning rate for Adam
+    :param beta1:momentum term of Adam
+    :return:
+    """
+    def create_discriminator(discrim_inputs, discrim_targets, ndf=64):
+        """
+        Discrimantor
+        :param discrim_inputs:
+        :param discrim_targets:
+        :param ndf:Number of discriminator filters in first conv layer
+        :return:
+        """
+        n_layers = 3
+        layers = []
+
+        # 2* [batch, height, width, in_channels] ==> [batch, height, width, in_channels]
+        input = tf.concat([discrim_inputs, discrim_targets], axis=3)
+
+        # layer_1:[batch, 256, 256, in_channels*2] => [batch, 128, 128, ndf
+        with tf.variable_scope("layer_1"):
+            conv = conv2d(input, ndf, stride=2)
+            rectified = lrelu(conv, 0.2)
+            layers.append(rectified)
+
+        # layer_2:[batch, 128, 128, ndf] => [batch, 64, 64, ndf*2]
+        # layer_3:[batch, 64, 64, ndf*2] => [batch, 32, 32, ndf*4]
+        # layer_4:[batch, 32, 32, ndf*4] => [batch, 31, 31, ndf*8]
+        for i in range(n_layers):
+            with tf.variable_scope("layer_%d" % (len(layers) + 1)):
+                out_channels = ndf * min(2**(i+1), 8)
+                stride = 1 if i == n_layers -1 else 2
+                conv = conv2d(layers[-1], out_channels, stride=stride)
+                normalized = batchnorm(conv)
+                rectified = lrelu(normalized, 0.2)
+                layers.append(rectified)
+
+        # layer_5:[batch, 31, 31, ndf*8] => [batch, 30, 30, 1]
+        with tf.variable_scope("layer_%d" % (len(layers) + 1)):
+            conv = conv2d(rectified, output_channels=1, stride=1)
+            output = tf.sigmoid(conv)
+            layers.append(output)
+
+        return layers[-1]
+
+    with tf.variable_scope("generator") as scope:
+        out_channels = int(targets.get_shape()[-1])
+        outputs = create_generator(inputs, out_channels)
+
+    # create two copies of discriminator, one for real pairs and one for fake pairs
+    # they share the  same underlying variables
+    with tf.name_scope("real_discriminator"):
+        with tf.variable_scope("discriminator"):
+            # 2x [batch, height, width, channels]=>[batch, 30, 30, 1]
+            predict_real = create_discriminator(inputs, targets)
+
+    with tf.name_scope("fake_discriminator"):
+        with tf.variable_scope("discriminator",reuse=True):
+            # 2x [batch, height, wdith, channels]=>[batch, 30, 30, 1]
+            predict_fake = create_discriminator(inputs, outputs)
+
+    with tf.name_scope("discriminator_loss"):
+        # minimizing -tf.log will try to get inputs to 1
+        # predict_real => 1
+        # predict_fake => 0
+        discrim_loss = tf.reduce_mean(
+            -(tf.log(predict_real + EPS) + tf.log(1 - predict_fake + EPS))
+        )
+
+    with tf.name_scope("generator_loss"):
+        # predict_fake => 1
+        # abs(targets - outputs) => 0
+        gen_loss_GAN = tf.reduce_mean(-tf.log(predict_fake + EPS))
+        gen_loss_L1 = tf.reduce_mean(tf.abs(targets - outputs))
+        gen_loss = gen_loss_GAN * gan_weight + gen_loss_L1 * l1_weight
+
+    with tf.name_scope("discriminator_train"):
+        discrim_tvars = [var for var in tf.trainable_variables() if var.name.startwitch("discriminator")]
+        discrim_optim = tf.train.AdamOptimizer(lr, beta1)
+        discrim_grads_and_vars = discrim_optim.compute_gradients(discrim_loss, var_list=discrim_tvars)
+        discrim_train = discrim_optim.apply_gradients(discrim_grads_and_vars)
+
+    with tf.name_scope("grenrator_train"):
+        with tf.control_dependencies([discrim_train]):
+            gen_tvars = [var for var in tf.trainable_variables() if var.name.startwitch("generator")]
+            gen_optim = tf.train.AdamOptimizer(lr, beta1)
+            gen_grads_and_vars = gen_optim.compute_gradients(gen_loss, var_list=gen_tvars)
+            gen_train =gen_optim.apply_gradients(gen_grads_and_vars)
+
+    ema = tf.train.ExponentialMovingAverage(decay=0.09)
+    update_losses = ema.apply([discrim_loss, gen_loss_GAN, gen_loss_L1])
+
+    global_step = tf.contrib.framework.get_or_create_global_step()
+    incr_global_step = tf.assign(global_step, global_step + 1)
+
+    return Model(
+        predict_real=predict_real,
+        predict_fake=predict_fake,
+        discrim_loss=ema.average(discrim_loss),
+        discrim_grads_and_vars=discrim_grads_and_vars,
+        gen_loss_GAN=ema.average(gen_loss_GAN),
+        gen_loss_L1=ema.average(gen_loss_L1),
+        gen_grads_and_vars=gen_grads_and_vars,
+        outputs=outputs,
+        train=tf.group(update_losses, incr_global_step, gen_train)
+    )
+
+
+def save_images(fetches, step=None):
+    pass
+
+
+def append_index(filesets, step=False):
+    pass
+
+
+def train(seed=None,
+          input_dir):
+    """
+
+    :param seed:
+    :param input_dir
+    :return:
+    """
+    if seed is None:
+        seed = random.randint(0, 2**31 - 1)
+
+    tf.set_random_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
